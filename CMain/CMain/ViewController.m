@@ -7,7 +7,6 @@
 //
 
 #import "ViewController.h"
-#import "fishhook.h"
 
 @interface ViewController ()
 
@@ -19,27 +18,18 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     // Do any additional setup after loading the view.
-    NSLog(@"我还没被绑定");
-    NSLog(@"我还是个老司机");
-    
-    struct rebinding nslog;
-    nslog.name = "NSLog";
-    nslog.replacement = myNslog;
-    nslog.replaced = (void *)&sys_nslog;
-    
-    struct rebinding rebs[1] = {nslog};
-    rebind_symbols(rebs, 1);
 }
 
-static void(*sys_nslog)(NSString * format,...);
-
-void myNslog(NSString * format,...){
-    format = [format stringByAppendingString:@"勾上了!\n"];
-    sys_nslog(format);
+- (void)viewDidAppear:(BOOL)animated{
+    [super viewDidAppear:animated];
+    NSLog(@"这是正经的 viewDidAppear");
 }
+
+#pragma mark - 触摸事件
 
 - (void)touchesBegan:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event{
     NSLog(@"点击了屏幕!!");
+    [self viewDidAppear:YES];
 }
 
 @end

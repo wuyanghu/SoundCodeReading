@@ -15,7 +15,9 @@
 		76055186236472140028139A /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 76055185236472140028139A /* main.m */; };
 		76055190236472140028139A /* CMainTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 7605518F236472140028139A /* CMainTests.m */; };
 		7605519B236472140028139A /* CMainUITests.m in Sources */ = {isa = PBXBuildFile; fileRef = 7605519A236472140028139A /* CMainUITests.m */; };
-		760551AA23647C670028139A /* fishhook.c in Sources */ = {isa = PBXBuildFile; fileRef = 760551A923647C670028139A /* fishhook.c */; };
+		760551AD23652B760028139A /* ViewController+HOOKTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 760551AC23652B760028139A /* ViewController+HOOKTest.m */; };
+		760551B023652C5A0028139A /* ViewController+FishHook.m in Sources */ = {isa = PBXBuildFile; fileRef = 760551AF23652C5A0028139A /* ViewController+FishHook.m */; };
+		760551E6236533870028139A /* fishhook.c in Sources */ = {isa = PBXBuildFile; fileRef = 760551E4236533870028139A /* fishhook.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -52,8 +54,12 @@
 		76055196236472140028139A /* CMainUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CMainUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		7605519A236472140028139A /* CMainUITests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CMainUITests.m; sourceTree = "<group>"; };
 		7605519C236472140028139A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		760551A823647C670028139A /* fishhook.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = fishhook.h; path = ../../finshhook/fishhook.h; sourceTree = "<group>"; };
-		760551A923647C670028139A /* fishhook.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = fishhook.c; path = ../../finshhook/fishhook.c; sourceTree = "<group>"; };
+		760551AB23652B760028139A /* ViewController+HOOKTest.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "ViewController+HOOKTest.h"; sourceTree = "<group>"; };
+		760551AC23652B760028139A /* ViewController+HOOKTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "ViewController+HOOKTest.m"; sourceTree = "<group>"; };
+		760551AE23652C5A0028139A /* ViewController+FishHook.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "ViewController+FishHook.h"; sourceTree = "<group>"; };
+		760551AF23652C5A0028139A /* ViewController+FishHook.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "ViewController+FishHook.m"; sourceTree = "<group>"; };
+		760551E4236533870028139A /* fishhook.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = fishhook.c; sourceTree = "<group>"; };
+		760551E5236533870028139A /* fishhook.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = fishhook.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -104,12 +110,15 @@
 		76055175236472130028139A /* CMain */ = {
 			isa = PBXGroup;
 			children = (
-				760551A923647C670028139A /* fishhook.c */,
-				760551A823647C670028139A /* fishhook.h */,
+				760551E3236533870028139A /* finshhook */,
 				76055176236472130028139A /* AppDelegate.h */,
 				76055177236472130028139A /* AppDelegate.m */,
 				76055179236472130028139A /* ViewController.h */,
 				7605517A236472130028139A /* ViewController.m */,
+				760551AE23652C5A0028139A /* ViewController+FishHook.h */,
+				760551AF23652C5A0028139A /* ViewController+FishHook.m */,
+				760551AB23652B760028139A /* ViewController+HOOKTest.h */,
+				760551AC23652B760028139A /* ViewController+HOOKTest.m */,
 				7605517C236472130028139A /* Main.storyboard */,
 				7605517F236472140028139A /* Assets.xcassets */,
 				76055181236472140028139A /* LaunchScreen.storyboard */,
@@ -135,6 +144,16 @@
 				7605519C236472140028139A /* Info.plist */,
 			);
 			path = CMainUITests;
+			sourceTree = "<group>";
+		};
+		760551E3236533870028139A /* finshhook */ = {
+			isa = PBXGroup;
+			children = (
+				760551E4236533870028139A /* fishhook.c */,
+				760551E5236533870028139A /* fishhook.h */,
+			);
+			name = finshhook;
+			path = ../../finshhook;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -269,8 +288,10 @@
 			files = (
 				7605517B236472130028139A /* ViewController.m in Sources */,
 				76055186236472140028139A /* main.m in Sources */,
-				760551AA23647C670028139A /* fishhook.c in Sources */,
 				76055178236472130028139A /* AppDelegate.m in Sources */,
+				760551B023652C5A0028139A /* ViewController+FishHook.m in Sources */,
+				760551E6236533870028139A /* fishhook.c in Sources */,
+				760551AD23652B760028139A /* ViewController+HOOKTest.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -443,6 +464,10 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = N76D3WSK95;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/CMain",
+				);
 				INFOPLIST_FILE = CMain/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -460,6 +485,10 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = N76D3WSK95;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/CMain",
+				);
 				INFOPLIST_FILE = CMain/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
