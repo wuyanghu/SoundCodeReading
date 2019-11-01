@@ -330,7 +330,7 @@ extern "C" {
 	extern void _pthread_keys_init();
 }
 
-
+#pragma mark - 启动
 //
 //  This is code to bootstrap dyld.  This work in normally done for a program by dyld and crt.
 //  In dyld we have to do this manually.

@@ -2969,7 +2969,7 @@ static void loadInsertedDylib(const char* path)
 		halt(dyld::mkstringf("could not load inserted library: %s\n", path));
 	}
 }
-
+#pragma mark - 入口
 //
 // Entry point for dyld.  The kernel loads dyld and jumps to __dyld_start which
 // sets up some registers and call this function.
