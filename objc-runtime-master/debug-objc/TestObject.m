@@ -11,6 +11,10 @@
 
 @implementation TestObject
 
++ (void)load{
+    NSLog(@"TestObject load");
+}
+
 - (void)dealloc {
     // 在ARC中，默认会调用super的dealloc
 }
