@@ -146,9 +146,9 @@ enum HaveNew { DontHaveNew = false, DoHaveNew = true };
 struct SideTable {
     // 锁对象
     spinlock_t slock;
-    // 索引哈希表(稠密哈希)
+    // 用于存储对象引用计数的map
     RefcountMap refcnts;
-    // weak表(核心实现)
+    // 用于存储对象弱引用的map
     weak_table_t weak_table;
 
     SideTable() {
@@ -724,13 +724,13 @@ class AutoreleasePoolPage
 #endif
     static size_t const COUNT = SIZE / sizeof(id);
 
-    magic_t const magic;
-    id *next;
-    pthread_t const thread;
-    AutoreleasePoolPage * const parent;
-    AutoreleasePoolPage *child;
-    uint32_t const depth;
-    uint32_t hiwat;
+    magic_t const magic;// 魔数，用于自身的完整性校验                                                         16字节
+    id *next;// 指向autorelePool page中的下一个可用位置                                           8字节
+    pthread_t const thread;// 和autorelePool page中相关的线程                                                  8字节
+    AutoreleasePoolPage * const parent;// autoreleasPool page双向链表的前向指针                                             8字节
+    AutoreleasePoolPage *child;// autoreleasPool page双向链表的后向指针                                             8字节
+    uint32_t const depth;// 当前autoreleasPool page在双向链表中的位置（深度）                                   4字节
+    uint32_t hiwat;// high water mark. 最高水位，可用近似理解为autoreleasPool page双向链表中的元素个数       4字节
 
     // SIZE-sizeof(*this) bytes of contents follow
 
@@ -1029,7 +1029,7 @@ class AutoreleasePoolPage
         assert(!hotPage());
 
         bool pushExtraBoundary = false;
-        if (haveEmptyPoolPlaceholder()) {
+        if (haveEmptyPoolPlaceholder()) {// 如果当前线程只有一个虚拟的空池，则这次需要真正创建一个page
             // We are pushing a second pool over the empty placeholder pool
             // or pushing the first object into the empty placeholder pool.
             // Before doing that, push a pool boundary on behalf of the pool 
@@ -1047,7 +1047,7 @@ class AutoreleasePoolPage
             objc_autoreleaseNoPool(obj);
             return nil;
         }
-        else if (obj == POOL_BOUNDARY  &&  !DebugPoolAllocation) {
+        else if (obj == POOL_BOUNDARY  &&  !DebugPoolAllocation) {// 如果obj == POOL_BOUNDARY，这里苹果有个小心机，它不会真正创建page，而是在线程的TSD中做了一个空池的标志
             // We are pushing a pool with no pool in place,
             // and alloc-per-pool debugging was not requested.
             // Install and return the empty pool placeholder.
@@ -1055,17 +1055,19 @@ class AutoreleasePoolPage
         }
 
         // We are pushing an object or a non-placeholder'd pool.
-
+        // 创建线程的第一个page，并置为hot page。
         // Install the first page.
         AutoreleasePoolPage *page = new AutoreleasePoolPage(nil);
         setHotPage(page);
         
         // Push a boundary on behalf of the previously-placeholder'd pool.
+        // 如果之前只是做了空池标记，这里还需要在栈中补上POOL_BOUNDARY，作为栈底哨兵
         if (pushExtraBoundary) {
             page->add(POOL_BOUNDARY);
         }
         
-        // Push the requested object or pool.
+        // Push the requested object or pool.  注意，这里的注释，进入page的不光可以有object，还可以是pool。
+
         return page->add(obj);
     }
 
@@ -1155,12 +1157,13 @@ public:
             } else {
                 // Error. For bincompat purposes this is not 
                 // fatal in executables built with old SDKs.
+                // 这是为了兼容旧的SDK，看来在新的SDK里面，token 可能的取值只有两个:POOL_BOUNDARY, page->begin() && !page->parent
                 return badPop(token);
             }
         }
 
         if (PrintPoolHiwat) printHiwat();
-
+        // 对page中的object做objc_release操作，一直到stop
         page->releaseUntil(stop);
 
         // memory: delete empty children
@@ -1176,6 +1179,7 @@ public:
             setHotPage(nil);
         } 
         else if (page->child) {
+            //删除多余的child，节约内存
             // hysteresis: keep one empty child if page is more than half full
             if (page->lessThanHalfFull()) {
                 page->child->kill();
@@ -1470,7 +1474,7 @@ objc_object::sidetable_getExtraRC_nolock()
     SideTable& table = SideTables()[this];
     RefcountMap::iterator it = table.refcnts.find(this);
     if (it == table.refcnts.end()) return 0;
-    else return it->second >> SIDE_TABLE_RC_SHIFT;
+    else return it->second >> SIDE_TABLE_RC_SHIFT;//引用计数的低2位不是用来记录引用次数的，而是分别表示对象是否有弱引用计数
 }
 
 

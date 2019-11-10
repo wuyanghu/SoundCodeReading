@@ -19,6 +19,7 @@
     NSString * className = [NSString stringWithUTF8String:object_getClassName(self)];
     (void)className;
     // Do any additional setup after loading the view.
+    NSObject *obj = [[NSObject alloc] init];
 }
 
 

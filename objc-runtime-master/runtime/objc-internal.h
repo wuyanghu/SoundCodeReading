@@ -215,6 +215,7 @@ enum objc_tag_index_t : uint16_t
 typedef uint16_t objc_tag_index_t;
 enum
 #endif
+//tagpointer 前四位表示
 {
     OBJC_TAG_NSAtom            = 0, 
     OBJC_TAG_1                 = 1, 
@@ -306,7 +307,7 @@ _objc_getTaggedPointerSignedValue(const void * _Nullable ptr);
 #define _OBJC_TAG_EXT_SLOT_MASK 0xff
 
 #if OBJC_MSB_TAGGED_POINTERS
-#   define _OBJC_TAG_MASK (1UL<<63)
+#   define _OBJC_TAG_MASK (1UL<<63)//它表明如果64位数据中，最高位是1的话，则表明当前是一个tagged pointer类型。
 #   define _OBJC_TAG_INDEX_SHIFT 60
 #   define _OBJC_TAG_SLOT_SHIFT 60
 #   define _OBJC_TAG_PAYLOAD_LSHIFT 4

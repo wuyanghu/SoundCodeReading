@@ -237,10 +237,10 @@ static void weak_resize(weak_table_t *weak_table, size_t new_size)
 {
     size_t old_size = TABLE_SIZE(weak_table);
 
-    weak_entry_t *old_entries = weak_table->weak_entries;
+    weak_entry_t *old_entries = weak_table->weak_entries;// 先把老数据取出来
     weak_entry_t *new_entries = (weak_entry_t *)
-        calloc(new_size, sizeof(weak_entry_t));
-
+        calloc(new_size, sizeof(weak_entry_t));// 在为新的size申请内存
+    // 重置weak_table的各成员
     weak_table->mask = new_size - 1;
     weak_table->weak_entries = new_entries;
     weak_table->max_hash_displacement = 0;
@@ -250,11 +250,11 @@ static void weak_resize(weak_table_t *weak_table, size_t new_size)
         weak_entry_t *entry;
         weak_entry_t *end = old_entries + old_size;
         for (entry = old_entries; entry < end; entry++) {
-            if (entry->referent) {
+            if (entry->referent) {// 依次将老的数据插入到新的内存空间
                 weak_entry_insert(weak_table, entry);
             }
         }
-        free(old_entries);
+        free(old_entries);// 释放老的内存空间
     }
 }
 
@@ -264,8 +264,8 @@ static void weak_grow_maybe(weak_table_t *weak_table)
     size_t old_size = TABLE_SIZE(weak_table);
 
     // Grow if at least 3/4 full.
-    if (weak_table->num_entries >= old_size * 3 / 4) {
-        weak_resize(weak_table, old_size ? old_size*2 : 64);
+    if (weak_table->num_entries >= old_size * 3 / 4) {// 当大于现有长度的3/4时，会做数组扩容操作。
+        weak_resize(weak_table, old_size ? old_size*2 : 64);// 初次会分配64个位置，之后在原有基础上*2
     }
 }
 
@@ -275,8 +275,8 @@ static void weak_compact_maybe(weak_table_t *weak_table)
     size_t old_size = TABLE_SIZE(weak_table);
 
     // Shrink if larger than 1024 buckets and at most 1/16 full.
-    if (old_size >= 1024  && old_size / 16 >= weak_table->num_entries) {
-        weak_resize(weak_table, old_size / 8);
+    if (old_size >= 1024  && old_size / 16 >= weak_table->num_entries) {// 当前数组长度大于1024，且实际使用空间最多只有1/16时，需要做收缩操作
+        weak_resize(weak_table, old_size / 8);// 缩小8倍
         // leaves new table no more than 1/2 full
     }
 }
@@ -320,10 +320,10 @@ weak_entry_for_referent(weak_table_t *weak_table, objc_object *referent)
     size_t index = begin;
     size_t hash_displacement = 0;
     while (weak_table->weak_entries[index].referent != referent) {
-        index = (index+1) & weak_table->mask;
-        if (index == begin) bad_weak_table(weak_table->weak_entries);
+        index = (index+1) & weak_table->mask;// hash冲突，做index+1，尝试下一个相邻位置，& weak_table->mask 确保了index不会越界，而且会使index自动find数组一圈
+        if (index == begin) bad_weak_table(weak_table->weak_entries);// 在数组中转了一圈还没找到目标元素，触发bad weak table crash
         hash_displacement++;
-        if (hash_displacement > weak_table->max_hash_displacement) {
+        if (hash_displacement > weak_table->max_hash_displacement) {// 如果hash冲突大于了最大可能的冲突次数，则说明目标对象不存在于数组中，返回nil
             return nil;
         }
     }
