@@ -16,6 +16,9 @@ int main(int argc, const char * argv[]) {
     @autoreleasepool {
         Class newClass = objc_allocateClassPair([NSObject class], "TestClass", 0);
         objc_registerClassPair(newClass);
+        
+        objc_setAssociatedObject(self, @"params", params, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+
     }
     return 0;
 }

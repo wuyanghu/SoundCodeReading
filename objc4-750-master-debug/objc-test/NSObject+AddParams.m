@@ -18,4 +18,9 @@
     return objc_getAssociatedObject(self, @"params");
 }
 
+//不需要手动释放，在dealloc时会根据标志位手动释放关联对象
+- (void)removeParams{
+    objc_removeAssociatedObjects(self);
+}
+
 @end

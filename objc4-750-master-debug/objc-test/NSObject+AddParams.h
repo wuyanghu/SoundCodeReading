@@ -11,6 +11,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface NSObject (AddParams)
 @property (nonatomic,strong) NSDictionary * params;
+- (void)removeParams;
 @end
 
 NS_ASSUME_NONNULL_END

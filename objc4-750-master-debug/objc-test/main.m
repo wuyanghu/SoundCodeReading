@@ -14,6 +14,7 @@
 #import "NSObject+AddParams.h"
 
 void printMethodNamesOfClass(Class cls);
+void associated(Person * obj);
 
 int main(int argc, const char * argv[]) {
     @autoreleasepool {
@@ -29,13 +30,27 @@ int main(int argc, const char * argv[]) {
         [person test];
         
         printMethodNamesOfClass([Person class]);
-        
-        [obj setParams:@{@"key":@"value"}];
+        associated(person);
         
     }
     return 0;
 }
 
+//关联对象源码分析
+void associated(Person * obj){
+    [obj setParams:@{@"key1":@"value1"}];//第一次关联对象
+    [obj setParams:@{@"key2":@"valu2"}];//第二次关联对象
+    
+    [obj params];//获取关联对象
+    
+    [obj setParams:nil];//释放关联对象
+    [obj setParams:@{@"key3":@"valu3"}];//验证关联对象是否释放
+    
+    [obj removeParams];//释放关联对象
+    [obj setParams:@{@"key4":@"valu4"}];//验证关联对象是否释放
+}
+
+//打印类的所有分类
 void printMethodNamesOfClass(Class cls){
     unsigned int count;
     // 获得方法数组
