@@ -35,6 +35,7 @@
 #include <Block.h>
 #include <objc/message.h>
 #include <mach/shared_region.h>
+#import "string.h"
 
 #define newprotocol(p) ((protocol_t *)p)
 
@@ -759,6 +760,8 @@ prepareMethodLists(Class cls, method_list_t **addedLists, int addedCount,
 // Attach method lists and properties and protocols from categories to a class.
 // Assumes the categories in cats are all loaded and sorted by load order, 
 // oldest categories first.
+
+// 获取到Category的Protocol list、Property list、Method list，然后通过attachLists函数添加到所属的类中
 static void 
 attachCategories(Class cls, category_list *cats, bool flush_caches)
 {
@@ -766,8 +769,9 @@ attachCategories(Class cls, category_list *cats, bool flush_caches)
     if (PrintReplacedMethods) printReplacements(cls, cats);
 
     bool isMeta = cls->isMetaClass();
-
+    
     // fixme rearrange to remove these intermediate allocations
+    // 按照Category个数，分配对应的内存空间
     method_list_t **mlists = (method_list_t **)
         malloc(cats->count * sizeof(*mlists));
     property_list_t **proplists = (property_list_t **)
@@ -779,14 +783,14 @@ attachCategories(Class cls, category_list *cats, bool flush_caches)
     int mcount = 0;
     int propcount = 0;
     int protocount = 0;
-    int i = cats->count;
+    int i = cats->count;//宿主类分类的总数
     bool fromBundle = NO;
     while (i--) {
         auto& entry = cats->list[i];
 
-        method_list_t *mlist = entry.cat->methodsForMeta(isMeta);
+        method_list_t *mlist = entry.cat->methodsForMeta(isMeta);//获取该分类的方法列表
         if (mlist) {
-            mlists[mcount++] = mlist;
+            mlists[mcount++] = mlist;//最后编译的分类最先添加到分类数组中
             fromBundle |= entry.hi->isBundle();
         }
 
@@ -802,13 +806,26 @@ attachCategories(Class cls, category_list *cats, bool flush_caches)
         }
     }
 
-    auto rw = cls->data();
+    auto rw = cls->data();//获取宿主类中的rw数据，其中包含宿主类的方法列表信息
 
+    // 主要是针对 分类中有关于内存管理相关方法情况下的 一些特殊处理
     prepareMethodLists(cls, mlists, mcount, NO, fromBundle);
+    
+    /*
+     rw代表类
+     methods代表类的方法类别
+     attachLists 将含有mcount个元素的mlists拼接到rw的methods上
+     */
     rw->methods.attachLists(mlists, mcount);
     free(mlists);
     if (flush_caches  &&  mcount > 0) flushCaches(cls);
-
+    
+    ////////测试数据
+    if (strcmp(rw->ro->name, "Person")==0){
+        _objc_inform("classname = %s",rw->ro->name);
+    }
+    //////
+    
     rw->properties.attachLists(proplists, propcount);
     free(proplists);
 

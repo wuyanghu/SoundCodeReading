@@ -724,12 +724,12 @@ class list_array_tt {
             // many lists -> many lists
             uint32_t oldCount = array()->count;
             uint32_t newCount = oldCount + addedCount;
-            setArray((array_t *)realloc(array(), array_t::byteSize(newCount)));
-            array()->count = newCount;
+            setArray((array_t *)realloc(array(), array_t::byteSize(newCount)));//根据新总数重新分配内存
+            array()->count = newCount;//重新设置元素总数
             memmove(array()->lists + addedCount, array()->lists, 
-                    oldCount * sizeof(array()->lists[0]));
+                    oldCount * sizeof(array()->lists[0]));//内存移动
             memcpy(array()->lists, addedLists, 
-                   addedCount * sizeof(array()->lists[0]));
+                   addedCount * sizeof(array()->lists[0]));//内存拷贝
         }
         else if (!list  &&  addedCount == 1) {
             // 0 lists -> 1 list
@@ -1379,13 +1379,20 @@ struct swift_class_t : objc_class {
 
 
 struct category_t {
+    // 所属的类名，而不是Category的名字
     const char *name;
+    // 所属的类，这个类型是编译期的类，这时候类还没有被重映射
     classref_t cls;
+    // 实例方法列表
     struct method_list_t *instanceMethods;
+    // 类方法列表
     struct method_list_t *classMethods;
+    // 协议列表
     struct protocol_list_t *protocols;
+    // 实例属性列表
     struct property_list_t *instanceProperties;
     // Fields below this point are not always present on disk.
+    // 类属性列表
     struct property_list_t *_classProperties;
 
     method_list_t *methodsForMeta(bool isMeta) {
