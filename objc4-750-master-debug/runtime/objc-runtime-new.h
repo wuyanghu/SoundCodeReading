@@ -1330,7 +1330,7 @@ struct objc_class : objc_object {
     uint32_t alignedInstanceSize() {
         return word_align(unalignedInstanceSize());
     }
-
+    //实例大小
     size_t instanceSize(size_t extraBytes) {
         size_t size = alignedInstanceSize() + extraBytes;
         // CF requires all objects be at least 16 bytes.

@@ -6537,7 +6537,7 @@ _class_createInstanceFromZone(Class cls, size_t extraBytes, void *zone,
 
     id obj;
     if (!zone  &&  fast) {
-        obj = (id)calloc(1, size);
+        obj = (id)calloc(1, size);//分配内存
         if (!obj) return nil;
         obj->initInstanceIsa(cls, hasCxxDtor);
     } 

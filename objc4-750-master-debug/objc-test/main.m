@@ -19,12 +19,16 @@ void weak(Person *person);//weak
 
 int main(int argc, const char * argv[]) {
     @autoreleasepool {
-        Class newClass = objc_allocateClassPair(objc_getClass("NSObject"), "newClass", 0);
-                objc_registerClassPair(newClass);
-        id newObject = [[newClass alloc]init];
-        NSLog(@"%@",newObject);
+//        Class newClass = objc_allocateClassPair(objc_getClass("NSObject"), "newClass", 0);
+//                objc_registerClassPair(newClass);
+//        id newObject = [[newClass alloc]init];
+//        NSLog(@"%@",newObject);
         
         Person * person = [[Person alloc] init];
+        Person * person2 = [Person alloc];
+        person2 = [person2 init];
+        
+        [person test];
         [person test];
         
         printMethodNamesOfClass([Person class]);

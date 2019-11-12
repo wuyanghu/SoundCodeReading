@@ -170,6 +170,7 @@ objc_object::hasNonpointerIsa()
     return isa.nonpointer;
 }
 
+#pragma mark - 初始化isa指针
 
 inline void 
 objc_object::initIsa(Class cls)
@@ -201,8 +202,8 @@ objc_object::initInstanceIsa(Class cls, bool hasCxxDtor)
 
     initIsa(cls, true, hasCxxDtor);
 }
-
-inline void 
+    
+inline void
 objc_object::initIsa(Class cls, bool nonpointer, bool hasCxxDtor) 
 { 
     assert(!isTaggedPointer()); 
@@ -239,6 +240,10 @@ objc_object::initIsa(Class cls, bool nonpointer, bool hasCxxDtor)
         isa = newisa;
     }
 }
+
+#pragma mark -
+#pragma mark -
+    
 
 
 inline Class 

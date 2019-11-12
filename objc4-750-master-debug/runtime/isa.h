@@ -53,6 +53,17 @@
     // uintptr_t fast_rr : 1;     // no r/r overrides
     // uintptr_t lock : 2;        // lock for atomic property, @synch
     // uintptr_t extraBytes : 1;  // allocated with extra bytes
+/*
+ uintptr_t nonpointer        : 1;//是否启用isa优化
+ uintptr_t has_assoc         : 1;//是否有关联对象
+ uintptr_t has_cxx_dtor      : 1;//是否有C++或ARC析构函数
+ uintptr_t shiftcls          : 33; //类指针的非零位 MACH_VM_MAX_ADDRESS 0x1000000000
+ uintptr_t magic             : 6;//固定为0x1a，用于在调试时区分对象是否已经初始化
+ uintptr_t weakly_referenced : 1;//是否被别的对象弱引用
+ uintptr_t deallocating      : 1;//对象是否正在被释放
+ uintptr_t has_sidetable_rc  : 1;//用于标识是否当前的引用计数过大，无法在isa中存储，而需要借用sidetable来存储
+ uintptr_t extra_rc          : 19;//对象的引用计数减1
+ */
 
 # if __arm64__
 #   define ISA_MASK        0x0000000ffffffff8ULL

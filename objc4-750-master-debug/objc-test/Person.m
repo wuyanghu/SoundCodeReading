@@ -12,4 +12,9 @@
 {
     NSLog(@"Person - run");
 }
+
+- (void)dealloc{
+    NSLog(@"%@",NSStringFromSelector(_cmd));
+}
+
 @end
