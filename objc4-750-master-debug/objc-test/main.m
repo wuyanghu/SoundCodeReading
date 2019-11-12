@@ -11,6 +11,7 @@
 #import "Person.h"
 #import "Person+Test.h"
 #import "Person+Test2.h"
+#import "NSObject+AddParams.h"
 
 void printMethodNamesOfClass(Class cls);
 
@@ -18,15 +19,19 @@ int main(int argc, const char * argv[]) {
     @autoreleasepool {
         NSObject *obj = [[NSObject alloc] init];
         __weak NSObject *weakObj = obj;
-//        Class newClass = objc_allocateClassPair(objc_getClass("NSObject"), "newClass", 0);
-//                objc_registerClassPair(newClass);
-//        id newObject = [[newClass alloc]init];
-//        NSLog(@"%@",newObject);
+        
+        Class newClass = objc_allocateClassPair(objc_getClass("NSObject"), "newClass", 0);
+                objc_registerClassPair(newClass);
+        id newObject = [[newClass alloc]init];
+        NSLog(@"%@",newObject);
         
         Person * person = [[Person alloc] init];
         [person test];
         
         printMethodNamesOfClass([Person class]);
+        
+        [obj setParams:@{@"key":@"value"}];
+        
     }
     return 0;
 }
