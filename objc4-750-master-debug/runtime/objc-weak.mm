@@ -78,18 +78,19 @@ static void grow_refs_and_insert(weak_entry_t *entry,
 {
     assert(entry->out_of_line());
 
-    size_t old_size = TABLE_SIZE(entry);
-    size_t new_size = old_size ? old_size * 2 : 8;
+    size_t old_size = TABLE_SIZE(entry);//获取old_size
+    size_t new_size = old_size ? old_size * 2 : 8;//old_size有值扩大2倍,没值默认为8
 
-    size_t num_refs = entry->num_refs;
-    weak_referrer_t *old_refs = entry->referrers;
-    entry->mask = new_size - 1;
+    size_t num_refs = entry->num_refs;//有效元素个数
+    weak_referrer_t *old_refs = entry->referrers;//保存旧的数组地址
+    entry->mask = new_size - 1;//设置元素个数
     
     entry->referrers = (weak_referrer_t *)
-        calloc(TABLE_SIZE(entry), sizeof(weak_referrer_t));
-    entry->num_refs = 0;
+        calloc(TABLE_SIZE(entry), sizeof(weak_referrer_t));//按mask重新分配内存大小
+    entry->num_refs = 0;//初始化有效元素个数
     entry->max_hash_displacement = 0;
     
+    //把旧的weak_referrer_t插入到新分配的内存中
     for (size_t i = 0; i < old_size && num_refs > 0; i++) {
         if (old_refs[i] != nil) {
             append_referrer(entry, old_refs[i]);
@@ -97,6 +98,7 @@ static void grow_refs_and_insert(weak_entry_t *entry,
         }
     }
     // Insert
+    //插入object到entry中
     append_referrer(entry, new_referrer);
     if (old_refs) free(old_refs);
 }
@@ -112,7 +114,7 @@ static void grow_refs_and_insert(weak_entry_t *entry,
 static void append_referrer(weak_entry_t *entry, objc_object **new_referrer)
 {
     if (! entry->out_of_line()) {// 如果weak_entry 尚未使用动态数组，走这里
-        // Try to insert inline.
+        // 尝试在静态数组inline_referrers插入
         for (size_t i = 0; i < WEAK_INLINE_COUNT; i++) {
             if (entry->inline_referrers[i] == nil) {
                 entry->inline_referrers[i] = new_referrer;
@@ -120,12 +122,12 @@ static void append_referrer(weak_entry_t *entry, objc_object **new_referrer)
             }
         }
 
-        // Couldn't insert inline. Allocate out of line.
         // 如果inline_referrers的位置已经存满了，则要转型为referrers，做动态数组。
         weak_referrer_t *new_referrers = (weak_referrer_t *)
             calloc(WEAK_INLINE_COUNT, sizeof(weak_referrer_t));
-        // This constructed table is invalid, but grow_refs_and_insert
-        // will fix it and rehash it.
+
+        // 静态数组数据插入到动态数组
+        // 疑问:静态数组已经无效，不需要释放内存吗?
         for (size_t i = 0; i < WEAK_INLINE_COUNT; i++) {
             new_referrers[i] = entry->inline_referrers[i];
         }
@@ -264,24 +266,27 @@ static void weak_resize(weak_table_t *weak_table, size_t new_size)
 }
 
 // Grow the given zone's table of weak references if it is full.
+// 扩容操作
 static void weak_grow_maybe(weak_table_t *weak_table)
 {
     size_t old_size = TABLE_SIZE(weak_table);
 
     // Grow if at least 3/4 full.
-    if (weak_table->num_entries >= old_size * 3 / 4) {
-        weak_resize(weak_table, old_size ? old_size*2 : 64);
+    if (weak_table->num_entries >= old_size * 3 / 4) {// 当大于现有长度的3/4时，会做数组扩容操作。
+        weak_resize(weak_table, old_size ? old_size*2 : 64);// 初次会分配64个位置，之后在原有基础上*2
     }
 }
 
 // Shrink the table if it is mostly empty.
+// 收容操作
 static void weak_compact_maybe(weak_table_t *weak_table)
 {
     size_t old_size = TABLE_SIZE(weak_table);
 
     // Shrink if larger than 1024 buckets and at most 1/16 full.
+    //当前数组长度大于1024，且实际使用空间最多只有1/16时，需要做收缩操作
     if (old_size >= 1024  && old_size / 16 >= weak_table->num_entries) {
-        weak_resize(weak_table, old_size / 8);
+        weak_resize(weak_table, old_size / 8);// 缩小8倍
         // leaves new table no more than 1/2 full
     }
 }
@@ -294,11 +299,11 @@ static void weak_entry_remove(weak_table_t *weak_table, weak_entry_t *entry)
 {
     // remove entry
     if (entry->out_of_line()) free(entry->referrers);
-    bzero(entry, sizeof(*entry));
+    bzero(entry, sizeof(*entry));//清理entry sizeof(*entry)个字节
 
     weak_table->num_entries--;
 
-    weak_compact_maybe(weak_table);
+    weak_compact_maybe(weak_table);//收容
 }
 
 
@@ -367,10 +372,12 @@ weak_unregister_no_lock(weak_table_t *weak_table, id referent_id,
         
         // 移除元素之后， 要检查一下weak_entry_t的hash数组是否已经空了
         bool empty = true;
+        //使用了可变数组，且数量不为0
         if (entry->out_of_line()  &&  entry->num_refs != 0) {
             empty = false;
         }
         else {
+            //静态数组有值
             for (size_t i = 0; i < WEAK_INLINE_COUNT; i++) {
                 if (entry->inline_referrers[i]) {
                     empty = false; 
@@ -439,12 +446,12 @@ weak_register_no_lock(weak_table_t *weak_table, id referent_id,
     // 在 weak_table中找到referent对应的weak_entry,并将referrer加入到weak_entry中
     weak_entry_t *entry;
     if ((entry = weak_entry_for_referent(weak_table, referent))) {// 如果能找到weak_entry,则讲referrer插入到weak_entry中
-        append_referrer(entry, referrer);// 将referrer插入到weak_entry_t的引用数组中
+        append_referrer(entry, referrer);// 将referrer追加到weak_entry_t的引用数组中
     } 
-    else {// 如果找不到，就新建一个
-        weak_entry_t new_entry(referent, referrer);
-        weak_grow_maybe(weak_table);
-        weak_entry_insert(weak_table, &new_entry);
+    else {
+        weak_entry_t new_entry(referent, referrer);//创建weak_entry_t
+        weak_grow_maybe(weak_table);//扩大数组操作
+        weak_entry_insert(weak_table, &new_entry);//new_entry插入weak_table
     }
 
     // Do not set *referrer. objc_storeWeak() requires that the 

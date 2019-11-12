@@ -13,14 +13,12 @@
 #import "Person+Test2.h"
 #import "NSObject+AddParams.h"
 
-void printMethodNamesOfClass(Class cls);
-void associated(Person * obj);
+void printMethodNamesOfClass(Class cls);//打印类的所有分类
+void associated(Person * obj);//关联对象
+void weak(Person *person);//weak
 
 int main(int argc, const char * argv[]) {
     @autoreleasepool {
-        NSObject *obj = [[NSObject alloc] init];
-        __weak NSObject *weakObj = obj;
-        
         Class newClass = objc_allocateClassPair(objc_getClass("NSObject"), "newClass", 0);
                 objc_registerClassPair(newClass);
         id newObject = [[newClass alloc]init];
@@ -32,8 +30,17 @@ int main(int argc, const char * argv[]) {
         printMethodNamesOfClass([Person class]);
         associated(person);
         
+        weak(person);
+        
     }
     return 0;
+}
+//weak源码分析
+void weak(Person *person){
+    __weak Person *weakPerson = person;
+    __weak Person *weakPerson2 = person;
+    NSLog(@"person指针:%p\nweakPerson指针:%p",person,weakPerson);
+    NSLog(@"person指针地址:%p\nweakPerson指针地址:%p",&person,&weakPerson);
 }
 
 //关联对象源码分析

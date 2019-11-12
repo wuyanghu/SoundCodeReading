@@ -323,6 +323,7 @@ storeWeak(id *location, objc_object *newObj)
     }
 
     // 将 weak ptr地址 从obj的weak_entry_t中移除 Clean up old value, if any.
+    // 释放的时候会走这里
     if (haveOld) {
         weak_unregister_no_lock(&oldTable->weak_table, oldObj, location);// 如果weak_ptr之前弱引用过别的对象oldObj，则调用weak_unregister_no_lock，在oldObj的weak_entry_t中移除该weak_ptr地址
     }
