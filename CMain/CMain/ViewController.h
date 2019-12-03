@@ -7,7 +7,7 @@
 //
 
 #import <UIKit/UIKit.h>
-
+extern NSString * const LMJName;
 @interface ViewController : UIViewController
 
 

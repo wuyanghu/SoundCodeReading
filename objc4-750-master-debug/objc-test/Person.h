@@ -14,6 +14,9 @@ NS_ASSUME_NONNULL_BEGIN
     int _age;
 }
 - (void)run;
+
+- (void)walkInstance;
++ (void)walkClass;
 @end
 
 NS_ASSUME_NONNULL_END

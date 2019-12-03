@@ -299,9 +299,11 @@ _objc_debug_taggedpointer_ext_classes:
 	.fill 256, 8, 0
 #endif
 
+/// 入口
 	ENTRY _objc_msgSend
 	UNWIND _objc_msgSend, NoFrame
 
+//p0寄存器，消息接收者;p0是objc_msgSend()传入的第一个参数，也就是消息接收者
 	cmp	p0, #0			// nil check and tagged pointer check
 #if SUPPORT_TAGGED_POINTERS
 	b.le	LNilOrTagged		//  (MSB tagged pointer looks negative)
@@ -311,11 +313,11 @@ _objc_debug_taggedpointer_ext_classes:
 	ldr	p13, [x0]		// p13 = isa
 	GetClassFromIsa_p16 p13		// p16 = class
 LGetIsaDone:
-	CacheLookup NORMAL		// calls imp or objc_msgSend_uncached
+	CacheLookup NORMAL		// calls imp or objc_msgSend_uncached 缓存查找
 
 #if SUPPORT_TAGGED_POINTERS
 LNilOrTagged:
-	b.eq	LReturnZero		// nil check
+	b.eq	LReturnZero		// nil check  如果消息接收者为空，直接退出这个函数
 
 	// tagged
 	adrp	x10, _objc_debug_taggedpointer_classes@PAGE

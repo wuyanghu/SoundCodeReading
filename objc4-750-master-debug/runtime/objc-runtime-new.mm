@@ -2461,7 +2461,9 @@ readProtocol(protocol_t *newproto, Class protocol_class,
 * Called by: map_images_nolock
 *
 * Locking: runtimeLock acquired by map_images
+* 核心是用来读取Mach-O格式文件的runtime相关的section信息，并转化为runtime内部的数据结构
 **********************************************************************/
+
 void _read_images(header_info **hList, uint32_t hCount, int totalClasses, int unoptimizedTotalClasses)
 {
     header_info *hi;
@@ -2489,10 +2491,11 @@ void _read_images(header_info **hList, uint32_t hCount, int totalClasses, int un
 # if SUPPORT_INDEXED_ISA
         // Disable nonpointer isa if any image contains old Swift code
         for (EACH_HEADER) {
+            //使用了swift 3.0前的swift代码
             if (hi->info()->containsSwift()  &&
                 hi->info()->swiftVersion() < objc_image_info::SwiftVersion3)
             {
-                DisableNonpointerIsa = true;
+                DisableNonpointerIsa = true;//不开启isa指针优化
                 if (PrintRawIsa) {
                     _objc_inform("RAW ISA: disabling non-pointer isa because "
                                  "the app or a framework contains Swift code "
@@ -2505,9 +2508,9 @@ void _read_images(header_info **hList, uint32_t hCount, int totalClasses, int un
 
 # if TARGET_OS_OSX
         // Disable non-pointer isa if the app is too old
-        // (linked before OS X 10.11)
+        // (linked before OS X 10.11):OSX版本早于10.11
         if (dyld_get_program_sdk_version() < DYLD_MACOSX_VERSION_10_11) {
-            DisableNonpointerIsa = true;
+            DisableNonpointerIsa = true;//不开启isa指针优化
             if (PrintRawIsa) {
                 _objc_inform("RAW ISA: disabling non-pointer isa because "
                              "the app is too old (SDK version " SDK_FORMAT ")",
@@ -2520,8 +2523,9 @@ void _read_images(header_info **hList, uint32_t hCount, int totalClasses, int un
         for (EACH_HEADER) {
             if (hi->mhdr()->filetype != MH_EXECUTE) continue;
             unsigned long size;
+            //在OSX系统下，Mach-O的DATA段明确指明了__objc_rawisa
             if (getsectiondata(hi->mhdr(), "__DATA", "__objc_rawisa", &size)) {
-                DisableNonpointerIsa = true;
+                DisableNonpointerIsa = true;//不开启isa指针优化
                 if (PrintRawIsa) {
                     _objc_inform("RAW ISA: disabling non-pointer isa because "
                                  "the app has a __DATA,__objc_rawisa section");
@@ -2560,7 +2564,7 @@ void _read_images(header_info **hList, uint32_t hCount, int totalClasses, int un
     // Discover classes. Fix up unresolved future classes. Mark bundle classes.
 
     for (EACH_HEADER) {
-        classref_t *classlist = _getObjc2ClassList(hi, &count);
+        classref_t *classlist = _getObjc2ClassList(hi, &count);//在section中读取class list
         
         if (! mustReadClasses(hi)) {
             // Image is sufficiently optimized that we need not call readClass()
@@ -2594,7 +2598,7 @@ void _read_images(header_info **hList, uint32_t hCount, int totalClasses, int un
     
     if (!noClassesRemapped()) {
         for (EACH_HEADER) {
-            Class *classrefs = _getObjc2ClassRefs(hi, &count);
+            Class *classrefs = _getObjc2ClassRefs(hi, &count);//section中读取class 引用的信息
             for (i = 0; i < count; i++) {
                 remapClassRef(&classrefs[i]);
             }
@@ -2616,7 +2620,7 @@ void _read_images(header_info **hList, uint32_t hCount, int totalClasses, int un
             if (hi->isPreoptimized()) continue;
             
             bool isBundle = hi->isBundle();
-            SEL *sels = _getObjc2SelectorRefs(hi, &count);
+            SEL *sels = _getObjc2SelectorRefs(hi, &count);//section中读取selector的引用信息
             UnfixedSelectors += count;
             for (i = 0; i < count; i++) {
                 const char *name = sel_cname(sels[i]);
@@ -2654,7 +2658,7 @@ void _read_images(header_info **hList, uint32_t hCount, int totalClasses, int un
         bool isPreoptimized = hi->isPreoptimized();
         bool isBundle = hi->isBundle();
 
-        protocol_t **protolist = _getObjc2ProtocolList(hi, &count);
+        protocol_t **protolist = _getObjc2ProtocolList(hi, &count);//section中读取cls的Protocol信息
         for (i = 0; i < count; i++) {
             readProtocol(protolist[i], cls, protocol_map, 
                          isPreoptimized, isBundle);
@@ -2667,7 +2671,7 @@ void _read_images(header_info **hList, uint32_t hCount, int totalClasses, int un
     // Preoptimized images may have the right 
     // answer already but we don't know for sure.
     for (EACH_HEADER) {
-        protocol_t **protolist = _getObjc2ProtocolRefs(hi, &count);
+        protocol_t **protolist = _getObjc2ProtocolRefs(hi, &count);//section中读取protocol的ref信息
         for (i = 0; i < count; i++) {
             remapProtocolRef(&protolist[i]);
         }
@@ -2720,7 +2724,7 @@ void _read_images(header_info **hList, uint32_t hCount, int totalClasses, int un
     // Discover categories. 
     for (EACH_HEADER) {
         category_t **catlist = 
-            _getObjc2CategoryList(hi, &count);
+            _getObjc2CategoryList(hi, &count);//读取分类信息
         bool hasClassProperties = hi->info()->hasCategoryClassProperties();
 
         for (i = 0; i < count; i++) {

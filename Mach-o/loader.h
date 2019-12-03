@@ -107,19 +107,19 @@ struct mach_header_64 {
  *
  * Constants for the filetype field of the mach_header
  */
-#define	MH_OBJECT	0x1		/* relocatable object file */
-#define	MH_EXECUTE	0x2		/* demand paged executable file */
-#define	MH_FVMLIB	0x3		/* fixed VM shared library file */
-#define	MH_CORE		0x4		/* core file */
+#define	MH_OBJECT	0x1		/* relocatable object file:Target 文件：编译器对源码编译后得到的中间结果*/
+#define	MH_EXECUTE	0x2		/* demand paged executable file:可执行二进制文件*/
+#define	MH_FVMLIB	0x3		/* fixed VM shared library file:VM 共享库文件（还不清楚是什么东西）*/
+#define	MH_CORE		0x4		/* core file:Core 文件，一般在 App Crash 产生*/
 #define	MH_PRELOAD	0x5		/* preloaded executable file */
-#define	MH_DYLIB	0x6		/* dynamically bound shared library */
-#define	MH_DYLINKER	0x7		/* dynamic link editor */
-#define	MH_BUNDLE	0x8		/* dynamically bound bundle file */
-#define	MH_DYLIB_STUB	0x9		/* shared library stub for static */
+#define	MH_DYLIB	0x6		/* dynamically bound shared library:动态库*/
+#define	MH_DYLINKER	0x7		/* dynamic link editor:动态连接器 /usr/lib/dyld*/
+#define	MH_BUNDLE	0x8		/* dynamically bound bundle file:非独立的二进制文件，往往通过 gcc-bundle 生成*/
+#define	MH_DYLIB_STUB	0x9		/* shared library stub for static:静态链接文件（还不清楚是什么东西）*/
 					/*  linking only, no section contents */
-#define	MH_DSYM		0xa		/* companion file with only debug */
+#define	MH_DSYM		0xa		/* companion file with only debug:符号文件以及调试信息，在解析堆栈符号中常用*/
 					/*  sections */
-#define	MH_KEXT_BUNDLE	0xb		/* x86_64 kexts */
+#define	MH_KEXT_BUNDLE	0xb		/* x86_64 kexts:x86_64 内核扩展*/
 
 /* Constants for the flags field of the mach_header */
 #define	MH_NOUNDEFS	0x1		/* the object file has no undefined

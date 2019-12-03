@@ -27,7 +27,6 @@ int main(int argc, const char * argv[]) {
         Person * person = [[Person alloc] init];
         Person * person2 = [Person alloc];
         person2 = [person2 init];
-        
         [person test];
         [person test];
         
@@ -36,6 +35,8 @@ int main(int argc, const char * argv[]) {
         
         weak(person);
         
+        [[Person new] walkInstance];//消息转发
+        [Person walkClass];
     }
     return 0;
 }
