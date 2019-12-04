@@ -464,6 +464,7 @@ map_images_nolock(unsigned mhCount, const char * const mhPaths[],
     int totalClasses = 0;
     int unoptimizedTotalClasses = 0;
     {
+        //从section中读取HeaderInfo
         uint32_t i = mhCount;
         while (i--) {
             const headerType *mhdr = (const headerType *)mhdrs[i];
@@ -517,9 +518,13 @@ map_images_nolock(unsigned mhCount, const char * const mhPaths[],
     // (The executable may not be present in this infoList if the 
     // executable does not contain Objective-C code but Objective-C 
     // is dynamically loaded later.
-    if (firstTime) {
-        sel_init(selrefCount);
-        arr_init();
+    /*
+     执行一次性运行时初始化，必须延迟到找到可执行文件本身。这需要在进一步初始化之前完成。
+     如果可执行文件不包含Objective-C代码，但稍后会动态加载Objective-C，则可执行文件可能不会出现在这个infoList中
+     */
+    if (firstTime) {//首次运行时调用
+        sel_init(selrefCount);//初始化选择器表并注册内部使用的选择器
+        arr_init();//AutoreleasePoolPage与SideTable初始化
 
 #if SUPPORT_GC_COMPAT
         // Reject any GC images linked to the main executable.
@@ -574,7 +579,10 @@ map_images_nolock(unsigned mhCount, const char * const mhPaths[],
     }
 
     if (hCount > 0) {
-        _read_images(hList, hCount, totalClasses, unoptimizedTotalClasses);
+        /*
+         hList:
+         */
+        _read_images(hList, hCount, totalClasses, unoptimizedTotalClasses);//入口
     }
 
     firstTime = NO;
@@ -586,7 +594,7 @@ map_images_nolock(unsigned mhCount, const char * const mhPaths[],
 * Process the given image which is about to be unmapped by dyld.
 * mh is mach_header instead of headerType because that's what 
 *   dyld_priv.h says even for 64-bit.
-* 
+* 主要是做了header信息的移除。
 * Locking: loadMethodLock(both) and runtimeLock(new) acquired by unmap_image.
 **********************************************************************/
 void 

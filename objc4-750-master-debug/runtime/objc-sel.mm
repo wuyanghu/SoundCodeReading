@@ -41,6 +41,7 @@ static SEL search_builtins(const char *key);
 /***********************************************************************
 * sel_init
 * Initialize selector tables and register selectors used internally.
+* 初始化选择器表并注册内部使用的选择器
 **********************************************************************/
 void sel_init(size_t selrefCount)
 {
@@ -133,7 +134,7 @@ static SEL search_builtins(const char *name)
     return nil;
 }
 
-
+//在Objective-C运行时系统中注册方法，将方法名称映射到选择器，然后返回选择器值。
 static SEL __sel_registerName(const char *name, bool shouldLock, bool copy) 
 {
     SEL result = 0;

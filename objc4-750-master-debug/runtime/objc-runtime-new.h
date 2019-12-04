@@ -84,7 +84,7 @@ public:
 };
 
 
-// classref_t is unremapped class_t*
+// classref_t is unremapped class_t*:未映射的class_t
 typedef struct classref * classref_t;
 
 /***********************************************************************
@@ -716,7 +716,11 @@ class list_array_tt {
             return &list;
         }
     }
-
+    /*
+     addedLists:需要添加的元素
+     addedCount:数组长度
+     结果:导致新的数组元素在旧元素前面
+     */
     void attachLists(List* const * addedLists, uint32_t addedCount) {
         if (addedCount == 0) return;
 
@@ -726,10 +730,12 @@ class list_array_tt {
             uint32_t newCount = oldCount + addedCount;
             setArray((array_t *)realloc(array(), array_t::byteSize(newCount)));//根据新总数重新分配内存
             array()->count = newCount;//重新设置元素总数
+            //内存移动:把oldArray整体往后挪addedCount位置
             memmove(array()->lists + addedCount, array()->lists, 
-                    oldCount * sizeof(array()->lists[0]));//内存移动
+                    oldCount * sizeof(array()->lists[0]));
+            //内存拷贝:把addedLists放到0-(addedCount-1)的位置
             memcpy(array()->lists, addedLists, 
-                   addedCount * sizeof(array()->lists[0]));//内存拷贝
+                   addedCount * sizeof(array()->lists[0]));
         }
         else if (!list  &&  addedCount == 1) {
             // 0 lists -> 1 list

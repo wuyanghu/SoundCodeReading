@@ -27,7 +27,7 @@
 #include "objc-file.h"
 
 
-// Look for a __DATA or __DATA_CONST or __DATA_DIRTY section 
+// Look for a __DATA or __DATA_CONST or __DATA_DIRTY section:在section查找一个__DATA或__DATA_CONST或__DATA_DIRTY
 // with the given name that stores an array of T.
 template <typename T>
 T* getDataSection(const headerType *mhdr, const char *sectname, 
@@ -54,19 +54,20 @@ T* getDataSection(const headerType *mhdr, const char *sectname,
         return getDataSection<type>(hi->mhdr(), sectname, nil, outCount); \
     }
 
+#pragma mark - 获取section
 //      function name                 content type     section name
-GETSECT(_getObjc2SelectorRefs,        SEL,             "__objc_selrefs"); 
+GETSECT(_getObjc2SelectorRefs,        SEL,             "__objc_selrefs"); //section中读取selector的引用信息，并调用sel_registerNameNoLock方法处理。
 GETSECT(_getObjc2MessageRefs,         message_ref_t,   "__objc_msgrefs"); 
-GETSECT(_getObjc2ClassRefs,           Class,           "__objc_classrefs");
+GETSECT(_getObjc2ClassRefs,           Class,           "__objc_classrefs");//section中读取class 引用的信息，并调用remapClassRef方法来处理。
 GETSECT(_getObjc2SuperRefs,           Class,           "__objc_superrefs");
-GETSECT(_getObjc2ClassList,           classref_t,      "__objc_classlist");
-GETSECT(_getObjc2NonlazyClassList,    classref_t,      "__objc_nlclslist");
-GETSECT(_getObjc2CategoryList,        category_t *,    "__objc_catlist");
+GETSECT(_getObjc2ClassList,           classref_t,      "__objc_classlist");//section中读取class list
+GETSECT(_getObjc2NonlazyClassList,    classref_t,      "__objc_nlclslist");//section中读取non-lazy class信息，并调用static Class realizeClass(Class cls)方法来实现这些class。realizeClass方法核心是初始化objc_class数据结构，赋予初始值。
+GETSECT(_getObjc2CategoryList,        category_t *,    "__objc_catlist");//section中读取category信息，并调用addUnattachedCategoryForClass方法来为类或元类添加对应的方法，属性和协议。
 GETSECT(_getObjc2NonlazyCategoryList, category_t *,    "__objc_nlcatlist");
-GETSECT(_getObjc2ProtocolList,        protocol_t *,    "__objc_protolist");
-GETSECT(_getObjc2ProtocolRefs,        protocol_t *,    "__objc_protorefs");
+GETSECT(_getObjc2ProtocolList,        protocol_t *,    "__objc_protolist");//在__objc_protolist section中读取cls的Protocol信息，并调用readProtocol方法来读取Protocol信息。
+GETSECT(_getObjc2ProtocolRefs,        protocol_t *,    "__objc_protorefs");//section中读取protocol的ref信息，并调用remapProtocolRef方法来处理。
 GETSECT(getLibobjcInitializers,       UnsignedInitializer, "__objc_init_func");
-
+#pragma mark ----
 
 objc_image_info *
 _getObjcImageInfo(const headerType *mhdr, size_t *outBytes)

@@ -757,10 +757,9 @@ prepareMethodLists(Class cls, method_list_t **addedLists, int addedCount,
 }
 
 
-// Attach method lists and properties and protocols from categories to a class.
-// Assumes the categories in cats are all loaded and sorted by load order, 
+// Attach method lists and properties and protocols from categories to a class.:将类别中的方法列表、属性和协议附加到类中。
+// Assumes the categories in cats are all loaded and sorted by load order, : 假设在分类中的列表(包括协议、方法等)中的所有categories都已加载并且加载顺序排序
 // oldest categories first.
-
 // 获取到Category的Protocol list、Property list、Method list，然后通过attachLists函数添加到所属的类中
 static void 
 attachCategories(Class cls, category_list *cats, bool flush_caches)
@@ -909,10 +908,11 @@ static void methodizeClass(Class cls)
 
 /***********************************************************************
 * remethodizeClass
-* Attach outstanding categories to an existing class.
-* Fixes up cls's method list, protocol list, and property list.
-* Updates method caches for cls and its subclasses.
-* Locking: runtimeLock must be held by the caller
+ * Attach outstanding categories to an existing class.:将未完成的类别附加到现有类
+ * Fixes up cls's method list, protocol list, and property list.:
+ 修复了cls的方法列表、协议列表和属性列表
+ * Updates method caches for cls and its subclasses.:更新cls及其子类的方法缓存。
+ * Locking: runtimeLock must be held by the caller:锁定:runtimeLock必须由调用者持有
 **********************************************************************/
 static void remethodizeClass(Class cls)
 {
@@ -2220,7 +2220,7 @@ unmap_image(const char *path __unused, const struct mach_header *mh)
 {
     recursive_mutex_locker_t lock(loadMethodLock);
     mutex_locker_t lock2(runtimeLock);
-    unmap_image_nolock(mh);
+    unmap_image_nolock(mh);//主要是做了header信息的移除。
 }
 
 
@@ -2455,13 +2455,13 @@ readProtocol(protocol_t *newproto, Class protocol_class,
 }
 
 /***********************************************************************
-* _read_images
-* Perform initial processing of the headers in the linked 
-* list beginning with headerList. 
-*
-* Called by: map_images_nolock
-*
-* Locking: runtimeLock acquired by map_images
+_read_images
+ Perform initial processing of the headers in the linked:对链接中的headers执行初始处理
+ list beginning with headerList.:列表以headerList开头
+ 
+ Called by: map_images_nolock
+
+ Locking: runtimeLock acquired by map_images:由map_images获取runtimeLock
 * 核心是用来读取Mach-O格式文件的runtime相关的section信息，并转化为runtime内部的数据结构
 **********************************************************************/
 
@@ -2722,10 +2722,10 @@ void _read_images(header_info **hList, uint32_t hCount, int totalClasses, int un
 
     ts.log("IMAGE TIMES: realize future classes");
 
-    // Discover categories. 
+    // Discover categories. :读取分类信息
     for (EACH_HEADER) {
         category_t **catlist = 
-            _getObjc2CategoryList(hi, &count);//读取分类信息
+            _getObjc2CategoryList(hi, &count);
         bool hasClassProperties = hi->info()->hasCategoryClassProperties();
 
         for (i = 0; i < count; i++) {
