@@ -885,6 +885,11 @@ void _objc_init(void)
     lock_init();
     exception_init();
 
+    /*
+     map_images:OC image被加载映射到内存（+load()方法在此时被调用
+     load_images:OC image被init时
+     unmap_image:OC image被移除内存时
+     */
     _dyld_objc_notify_register(&map_images, load_images, unmap_image);
 }
 

@@ -47,6 +47,7 @@
 #include <mach/machine/thread_status.h>
 #include <architecture/byte_order.h>
 
+#pragma mark - header
 /*
  * The 32-bit mach header appears at the very beginning of the object file for
  * 32-bit architectures.
@@ -70,10 +71,10 @@ struct mach_header {
  * 64-bit architectures.
  */
 struct mach_header_64 {
-	uint32_t	magic;		/* mach magic number identifier */
-	cpu_type_t	cputype;	/* cpu specifier */
-	cpu_subtype_t	cpusubtype;	/* machine specifier */
-	uint32_t	filetype;	/* type of file */
+    uint32_t	magic;		/* mach magic number identifier:魔数，用来标识这是一个Mach-O文件，有32位和64位两个版本 */
+    cpu_type_t	cputype;	/* cpu specifier:支持的CUP架构类型，如arm*/
+    cpu_subtype_t	cpusubtype;	/* machine specifier:在支持的CUP架构类型下，所支持的具体机器型号。在我们的例子中，APP是支持所有arm64的机型的:CUP_SUBTYPE_ARM64_ALL*/
+    uint32_t	filetype;	/* type of file:Mach-O的文件类型 */
 	uint32_t	ncmds;		/* number of load commands */
 	uint32_t	sizeofcmds;	/* the size of all the load commands */
 	uint32_t	flags;		/* flags */
@@ -84,6 +85,7 @@ struct mach_header_64 {
 #define MH_MAGIC_64 0xfeedfacf /* the 64-bit mach magic number */
 #define MH_CIGAM_64 0xcffaedfe /* NXSwapInt(MH_MAGIC_64) */
 
+#pragma mark - 文件类型
 /*
  * The layout of the file depends on the filetype.  For all but the MH_OBJECT
  * file type the segments are padded out and aligned on a segment alignment
@@ -121,9 +123,10 @@ struct mach_header_64 {
 					/*  sections */
 #define	MH_KEXT_BUNDLE	0xb		/* x86_64 kexts:x86_64 内核扩展*/
 
+#pragma mark - flags Mach-O文件的标志位
+
 /* Constants for the flags field of the mach_header */
-#define	MH_NOUNDEFS	0x1		/* the object file has no undefined
-					   references */
+#define	MH_NOUNDEFS	0x1		/* the object file has no undefined references :Target 文件中没有带未定义的符号，常为静态二进制文件 */
 #define	MH_INCRLINK	0x2		/* the object file is the output of an
 					   incremental link against a base file
 					   and can't be link edited again */
@@ -136,15 +139,15 @@ struct mach_header_64 {
 #define MH_PREBOUND	0x10		/* the file has its dynamic undefined
 					   references prebound. */
 #define MH_SPLIT_SEGS	0x20		/* the file has its read-only and
-					   read-write segments split */
+read-write segments split:Target 文件中的只读 Segment 和可读写 Segment 分开 */
 #define MH_LAZY_INIT	0x40		/* the shared library init routine is
 					   to be run lazily via catching memory
 					   faults to its writeable segments
 					   (obsolete) */
 #define MH_TWOLEVEL	0x80		/* the image is using two-level name
-					   space bindings */
+space bindings:该 Image 使用二级命名空间(two name space binding)绑定方案 */
 #define MH_FORCE_FLAT	0x100		/* the executable is forcing all images
-					   to use flat name space bindings */
+to use flat name space bindings:使用扁平命名空间(flat name space binding)绑定（与 MH_TWOLEVEL 互斥） */
 #define MH_NOMULTIDEFS	0x200		/* this umbrella guarantees no multiple
 					   defintions of symbols in its
 					   sub-images so the two-level namespace
@@ -166,9 +169,9 @@ struct mach_header_64 {
 #define MH_CANONICAL    0x4000		/* the binary has been canonicalized
 					   via the unprebind operation */
 #define MH_WEAK_DEFINES	0x8000		/* the final linked image contains
-					   external weak symbols */
+external weak symbols:二进制文件使用了弱符号 */
 #define MH_BINDS_TO_WEAK 0x10000	/* the final linked image uses
-					   weak symbols */
+weak symbols:二进制文件链接了弱符号 */
 
 #define MH_ALLOW_STACK_EXECUTION 0x20000/* When this bit is set, all stacks 
 					   in the task will be given stack
@@ -210,6 +213,7 @@ struct mach_header_64 {
 #define MH_APP_EXTENSION_SAFE 0x02000000 /* The code was linked for use in an
 					    application extension. */
 
+#pragma mark - Load commands
 /*
  * The load commands directly follow the mach_header.  The total size of all
  * of the commands is given by the sizeofcmds field in the mach_header.  All
@@ -257,7 +261,7 @@ struct load_command {
 #define	LC_DYSYMTAB	0xb	/* dynamic link-edit symbol table info */
 #define	LC_LOAD_DYLIB	0xc	/* load a dynamically linked shared library */
 #define	LC_ID_DYLIB	0xd	/* dynamically linked shared lib ident */
-#define LC_LOAD_DYLINKER 0xe	/* load a dynamic linker */
+#define LC_LOAD_DYLINKER 0xe	/* load a dynamic linker:启动动态加载器dyld */
 #define LC_ID_DYLINKER	0xf	/* dynamic linker identification */
 #define	LC_PREBOUND_DYLIB 0x10	/* modules prebound for a dynamically */
 				/*  linked shared library */
@@ -278,7 +282,7 @@ struct load_command {
 #define	LC_SEGMENT_64	0x19	/* 64-bit segment of this file to be
 				   mapped */
 #define	LC_ROUTINES_64	0x1a	/* 64-bit image routines */
-#define LC_UUID		0x1b	/* the uuid */
+#define LC_UUID		0x1b	/* the uuid:UUID, 2进制文件的唯一标识符 */
 #define LC_RPATH       (0x1c | LC_REQ_DYLD)    /* runpath additions */
 #define LC_CODE_SIGNATURE 0x1d	/* local of code signature */
 #define LC_SEGMENT_SPLIT_INFO 0x1e /* local of info to split segments */
@@ -382,6 +386,7 @@ struct segment_command_64 { /* for 64-bit architectures */
 				       protected.  All other pages of the
 				       segment are protected. */
 
+#pragma mark - Section header
 /*
  * A segment is made up of zero or more sections.  Non-MH_OBJECT files have
  * all of their segments with the proper sections in each, and padded to the
@@ -564,9 +569,9 @@ struct section_64 { /* for 64-bit architectures */
 #define	SEG_PAGEZERO	"__PAGEZERO"	/* the pagezero segment which has no */
 					/* protections and catches NULL */
 					/* references for MH_EXECUTE files */
+                    /*当时 MH_EXECUTE 文件时，表示空指针区域 **/
 
-
-#define	SEG_TEXT	"__TEXT"	/* the tradition UNIX text segment */
+#define	SEG_TEXT	"__TEXT"	/* the tradition UNIX text segment:代码/只读数据段 */
 #define	SECT_TEXT	"__text"	/* the real text part of the text */
 					/* section no headers, and no padding */
 #define SECT_FVMLIB_INIT0 "__fvmlib_init0"	/* the fvmlib initialization */
@@ -575,7 +580,7 @@ struct section_64 { /* for 64-bit architectures */
 					        /*  fvmlib initialization */
 						/*  section */
 
-#define	SEG_DATA	"__DATA"	/* the tradition UNIX data segment */
+#define	SEG_DATA	"__DATA"	/* the tradition UNIX data segment:数据段 */
 #define	SECT_DATA	"__data"	/* the real initialized data section */
 					/* no padding, no bss overlap */
 #define	SECT_BSS	"__bss"		/* the real uninitialized data section*/
@@ -583,7 +588,7 @@ struct section_64 { /* for 64-bit architectures */
 #define SECT_COMMON	"__common"	/* the section common symbols are */
 					/* allocated in by the link editor */
 
-#define	SEG_OBJC	"__OBJC"	/* objective-C runtime segment */
+#define	SEG_OBJC	"__OBJC"	/* objective-C runtime segment:Objective-C runtime 段 */
 #define SECT_OBJC_SYMBOLS "__symbol_table"	/* symbol table */
 #define SECT_OBJC_MODULES "__module_info"	/* module information */
 #define SECT_OBJC_STRINGS "__selector_strs"	/* string table */

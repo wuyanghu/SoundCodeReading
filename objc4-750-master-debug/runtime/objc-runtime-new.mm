@@ -2189,6 +2189,7 @@ map_images(unsigned count, const char * const paths[],
 extern bool hasLoadMethods(const headerType *mhdr);
 extern void prepare_load_methods(const headerType *mhdr);
 
+//OC image被init时
 void
 load_images(const char *path __unused, const struct mach_header *mh)
 {
