@@ -89,7 +89,7 @@ static inline dispatch_queue_t YYMemoryCacheGetReleaseQueue() {
 - (void)dealloc {
     CFRelease(_dic);
 }
-
+//node插入到头位置
 - (void)insertNodeAtHead:(_YYLinkedMapNode *)node {
     CFDictionarySetValue(_dic, (__bridge const void *)(node->_key), (__bridge const void *)(node));
     _totalCost += node->_cost;
@@ -102,7 +102,7 @@ static inline dispatch_queue_t YYMemoryCacheGetReleaseQueue() {
         _head = _tail = node;
     }
 }
-
+//node调整到头位置:在object:key或set:object已有node时
 - (void)bringNodeToHead:(_YYLinkedMapNode *)node {
     if (_head == node) return;
     
@@ -118,7 +118,7 @@ static inline dispatch_queue_t YYMemoryCacheGetReleaseQueue() {
     _head->_prev = node;
     _head = node;
 }
-
+//移除node
 - (void)removeNode:(_YYLinkedMapNode *)node {
     CFDictionaryRemoveValue(_dic, (__bridge const void *)(node->_key));
     _totalCost -= node->_cost;
@@ -128,7 +128,7 @@ static inline dispatch_queue_t YYMemoryCacheGetReleaseQueue() {
     if (_head == node) _head = node->_next;
     if (_tail == node) _tail = node->_prev;
 }
-
+//移除最后一个节点
 - (_YYLinkedMapNode *)removeTailNode {
     if (!_tail) return nil;
     _YYLinkedMapNode *tail = _tail;
@@ -178,6 +178,8 @@ static inline dispatch_queue_t YYMemoryCacheGetReleaseQueue() {
     dispatch_queue_t _queue;
 }
 
+#pragma mark - 5s间隔检查清理缓存
+//用延迟的方法检测缓存是否超出限制并清理
 - (void)_trimRecursively {
     __weak typeof(self) _self = self;
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(_autoTrimInterval * NSEC_PER_SEC)), dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0), ^{
@@ -196,6 +198,8 @@ static inline dispatch_queue_t YYMemoryCacheGetReleaseQueue() {
     });
 }
 
+#pragma mark - 按cost、count、age清除node
+//超出costLimit，从尾部开始移除node
 - (void)_trimToCost:(NSUInteger)costLimit {
     BOOL finish = NO;
     pthread_mutex_lock(&_lock);
@@ -208,7 +212,7 @@ static inline dispatch_queue_t YYMemoryCacheGetReleaseQueue() {
     pthread_mutex_unlock(&_lock);
     if (finish) return;
     
-    NSMutableArray *holder = [NSMutableArray new];
+    NSMutableArray *holder = [NSMutableArray new];//保存释放的node
     while (!finish) {
         if (pthread_mutex_trylock(&_lock) == 0) {
             if (_lru->_totalCost > costLimit) {
@@ -218,18 +222,18 @@ static inline dispatch_queue_t YYMemoryCacheGetReleaseQueue() {
                 finish = YES;
             }
             pthread_mutex_unlock(&_lock);
-        } else {
+        } else {//加锁失败,10ms尝试加锁
             usleep(10 * 1000); //10 ms
         }
     }
     if (holder.count) {
         dispatch_queue_t queue = _lru->_releaseOnMainThread ? dispatch_get_main_queue() : YYMemoryCacheGetReleaseQueue();
         dispatch_async(queue, ^{
-            [holder count]; // release in queue
+            [holder count]; // release in queue  没明白，怎么释放的队列?
         });
     }
 }
-
+//超出countLimit,从尾部开始移除node
 - (void)_trimToCount:(NSUInteger)countLimit {
     BOOL finish = NO;
     pthread_mutex_lock(&_lock);
@@ -263,7 +267,7 @@ static inline dispatch_queue_t YYMemoryCacheGetReleaseQueue() {
         });
     }
 }
-
+//超出ageLimit,从尾部开始移除node
 - (void)_trimToAge:(NSTimeInterval)ageLimit {
     BOOL finish = NO;
     NSTimeInterval now = CACurrentMediaTime();
@@ -332,6 +336,7 @@ static inline dispatch_queue_t YYMemoryCacheGetReleaseQueue() {
     _shouldRemoveAllObjectsOnMemoryWarning = YES;
     _shouldRemoveAllObjectsWhenEnteringBackground = YES;
     
+    //进后台或内存警告都会清理所有缓存
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(_appDidReceiveMemoryWarningNotification) name:UIApplicationDidReceiveMemoryWarningNotification object:nil];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(_appDidEnterBackgroundNotification) name:UIApplicationDidEnterBackgroundNotification object:nil];
     
@@ -394,17 +399,21 @@ static inline dispatch_queue_t YYMemoryCacheGetReleaseQueue() {
     return contains;
 }
 
+#pragma mark - objectForKey:key
+
 - (id)objectForKey:(id)key {
     if (!key) return nil;
     pthread_mutex_lock(&_lock);
     _YYLinkedMapNode *node = CFDictionaryGetValue(_lru->_dic, (__bridge const void *)(key));
     if (node) {
         node->_time = CACurrentMediaTime();
-        [_lru bringNodeToHead:node];
+        [_lru bringNodeToHead:node];//使用对象时自动把该node移动到首节点
     }
     pthread_mutex_unlock(&_lock);
     return node ? node->_value : nil;
 }
+
+#pragma mark - setObject:forKey:
 
 - (void)setObject:(id)object forKey:(id)key {
     [self setObject:object forKey:key withCost:0];
@@ -419,14 +428,14 @@ static inline dispatch_queue_t YYMemoryCacheGetReleaseQueue() {
     pthread_mutex_lock(&_lock);
     _YYLinkedMapNode *node = CFDictionaryGetValue(_lru->_dic, (__bridge const void *)(key));
     NSTimeInterval now = CACurrentMediaTime();
-    if (node) {
+    if (node) {//如果缓存中有node，更新time,value,const移到头部
         _lru->_totalCost -= node->_cost;
         _lru->_totalCost += cost;
         node->_cost = cost;
         node->_time = now;
         node->_value = object;
         [_lru bringNodeToHead:node];
-    } else {
+    } else {//没有创建一个，插入到头部
         node = [_YYLinkedMapNode new];
         node->_cost = cost;
         node->_time = now;
@@ -434,12 +443,13 @@ static inline dispatch_queue_t YYMemoryCacheGetReleaseQueue() {
         node->_value = object;
         [_lru insertNodeAtHead:node];
     }
-    if (_lru->_totalCost > _costLimit) {
+    //下面两个if检查并移除超出node
+    if (_lru->_totalCost > _costLimit) {//cost
         dispatch_async(_queue, ^{
             [self trimToCost:_costLimit];
         });
     }
-    if (_lru->_totalCount > _countLimit) {
+    if (_lru->_totalCount > _countLimit) {//count
         _YYLinkedMapNode *node = [_lru removeTailNode];
         if (_lru->_releaseAsynchronously) {
             dispatch_queue_t queue = _lru->_releaseOnMainThread ? dispatch_get_main_queue() : YYMemoryCacheGetReleaseQueue();
@@ -454,6 +464,8 @@ static inline dispatch_queue_t YYMemoryCacheGetReleaseQueue() {
     }
     pthread_mutex_unlock(&_lock);
 }
+
+#pragma mark - removeObjectForKey:key
 
 - (void)removeObjectForKey:(id)key {
     if (!key) return;

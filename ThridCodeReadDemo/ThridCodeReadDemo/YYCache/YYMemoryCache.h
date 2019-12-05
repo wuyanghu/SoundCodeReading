@@ -78,6 +78,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property NSTimeInterval ageLimit;
 
 /**
+ 自动检查清理缓存:默认间隔5s
+ 缓存持有一个内部计时器来检查缓存是否达到其限制，如果达到了限制，则开始驱逐对象。
  The auto trim check time interval in seconds. Default is 5.0.
  
  @discussion The cache holds an internal timer to check whether the cache reaches 

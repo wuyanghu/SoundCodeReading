@@ -142,12 +142,12 @@
 			children = (
 				76102DE823992F4A0094230D /* YYCache.h */,
 				76102DE323992F4A0094230D /* YYCache.m */,
+				76102DE423992F4A0094230D /* YYMemoryCache.h */,
+				76102DE223992F4A0094230D /* YYMemoryCache.m */,
 				76102DE123992F4A0094230D /* YYDiskCache.h */,
 				76102DE723992F4A0094230D /* YYDiskCache.m */,
 				76102DE623992F4A0094230D /* YYKVStorage.h */,
 				76102DE523992F4A0094230D /* YYKVStorage.m */,
-				76102DE423992F4A0094230D /* YYMemoryCache.h */,
-				76102DE223992F4A0094230D /* YYMemoryCache.m */,
 			);
 			path = YYCache;
 			sourceTree = "<group>";
