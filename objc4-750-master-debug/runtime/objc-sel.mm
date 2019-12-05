@@ -33,7 +33,7 @@ static const objc_selopt_t *builtins = NULL;
 
 static size_t SelrefCount = 0;
 
-static NXMapTable *namedSelectors;
+static NXMapTable *namedSelectors;//存储方法hash表
 
 static SEL search_builtins(const char *key);
 
@@ -102,7 +102,7 @@ static SEL sel_alloc(const char *name, bool copy)
     return (SEL)(copy ? strdupIfMutable(name) : name);    
 }
 
-
+//sel转字符
 const char *sel_getName(SEL sel) 
 {
     if (!sel) return "<null selector>";

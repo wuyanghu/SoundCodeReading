@@ -60,6 +60,10 @@ GETSECT(_getObjc2SelectorRefs,        SEL,             "__objc_selrefs"); //sect
 GETSECT(_getObjc2MessageRefs,         message_ref_t,   "__objc_msgrefs"); 
 GETSECT(_getObjc2ClassRefs,           Class,           "__objc_classrefs");//section中读取class 引用的信息，并调用remapClassRef方法来处理。
 GETSECT(_getObjc2SuperRefs,           Class,           "__objc_superrefs");
+/*
+ 这个section列出了所有的class，包括meta class
+ 该节中存储的是一个个的指针，指针指向的地址是class结构体所在的地址。class结构体在OC中用结构体objc_class 表示。
+ */
 GETSECT(_getObjc2ClassList,           classref_t,      "__objc_classlist");//section中读取class list
 GETSECT(_getObjc2NonlazyClassList,    classref_t,      "__objc_nlclslist");//section中读取non-lazy class信息，并调用static Class realizeClass(Class cls)方法来实现这些class。realizeClass方法核心是初始化objc_class数据结构，赋予初始值。
 GETSECT(_getObjc2CategoryList,        category_t *,    "__objc_catlist");//section中读取category信息，并调用addUnattachedCategoryForClass方法来为类或元类添加对应的方法，属性和协议。

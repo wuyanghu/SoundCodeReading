@@ -261,7 +261,8 @@ struct property_t {
     const char *attributes;
 };
 
-// Two bits of entsize are used for fixup markers.
+// Two bits of entsize are used for fixup markers.两个entsize位用于固定标记
+// 实例方法和类方法均用此方法
 struct method_list_t : entsize_list_tt<method_t, method_list_t, 0x3> {
     bool isFixedUp() const;
     void setFixedUp();

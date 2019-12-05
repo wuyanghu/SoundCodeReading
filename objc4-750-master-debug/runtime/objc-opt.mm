@@ -139,6 +139,7 @@ bool isPreoptimized(void)
 /***********************************************************************
 * Return YES if the shared cache does not have any classes with 
 * missing weak superclasses.
+ 如果共享缓存没有任何缺少弱超类的类，则返回YES。
 **********************************************************************/
 bool noMissingWeakSuperclasses(void) 
 {
@@ -149,6 +150,7 @@ bool noMissingWeakSuperclasses(void)
 
 /***********************************************************************
 * Return YES if this image's dyld shared cache optimizations are valid.
+ 如果此映像的dyld共享缓存优化有效，则返回YES
 **********************************************************************/
 bool header_info::isPreoptimized() const
 {

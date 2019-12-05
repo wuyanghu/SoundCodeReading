@@ -309,7 +309,7 @@ static void _NXMapRehash(NXMapTable *table) {
 	_objc_inform("*** maptable: count differs after rehashing; probably indicates a broken invariant: there are x and y such as isEqual(x, y) is TRUE but hash(x) != hash (y)\n");
     freeBuckets(pairs);
 }
-
+//NXMapTable *table当做字典来理解
 void *NXMapInsert(NXMapTable *table, const void *key, const void *value) {
     MapPair	*pairs = (MapPair *)table->buckets;
     unsigned	index = bucketOf(table, key);

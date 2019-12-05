@@ -488,6 +488,7 @@ static bool isKnownClass(Class cls) {
 * addClassTableEntry
 * Add a class to the table of all classes. If addMeta is true,
 * automatically adds the metaclass of the class as well.
+ 将一个类添加到所有类的表中。如果addMeta为真，则自动添加类的元类。
 * Locking: runtimeLock must be held by the caller.
 **********************************************************************/
 static void addClassTableEntry(Class cls, bool addMeta = true) {
@@ -1153,7 +1154,7 @@ static Class getClass(const char *name)
 
 /***********************************************************************
 * addNamedClass
-* Adds name => cls to the named non-meta class map.
+* Adds name => cls to the named non-meta class map.//非元类的cls到named
 * Warns about duplicate class names and keeps the old mapping.
 * Locking: runtimeLock must be held by the caller
 **********************************************************************/
@@ -1168,7 +1169,7 @@ static void addNamedClass(Class cls, const char *name, Class replacing = nil)
         // lookup must be in the secondary meta->nonmeta table.
         addNonMetaClass(cls);
     } else {
-        NXMapInsert(gdb_objc_realized_classes, name, cls);
+        NXMapInsert(gdb_objc_realized_classes, name, cls);//存储类名和指针
     }
     assert(!(cls->data()->flags & RO_META));
 
@@ -2235,7 +2236,7 @@ bool mustReadClasses(header_info *hi)
     const char *reason;
 
     // If the image is not preoptimized then we must read classes.
-    if (!hi->isPreoptimized()) {
+    if (!hi->isPreoptimized()) {//共享缓存有效为YES
         reason = nil; // Don't log this one because it is noisy.
         goto readthem;
     }
@@ -2255,6 +2256,7 @@ bool mustReadClasses(header_info *hi)
     }
 
     // If there are unresolved future classes then we must read classes.
+    //如果有未解决的未来类，那么我们必须读取类(future classes怎么翻译呢？)
     if (haveFutureNamedClasses()) {
         reason = "there are unresolved future classes pending";
         goto readthem;
@@ -2274,11 +2276,11 @@ bool mustReadClasses(header_info *hi)
 
 /***********************************************************************
 * readClass
-* Read a class and metaclass as written by a compiler.
-* Returns the new class pointer. This could be: 
+* Read a class and metaclass as written by a compiler.读取编译器编写的类和元类
+ * Returns the new class pointer. This could be: 返回一个新的class指针:包括cls,nil,something
 * - cls
 * - nil  (cls has a missing weak-linked superclass)
-* - something else (space for this class was reserved by a future class)
+* - something else (space for this class was reserved by a future class)这个类的空间由future类保留
 *
 * Note that all work performed by this function is preflighted by 
 * mustReadClasses(). Do not change this function without updating that one.
@@ -2471,7 +2473,7 @@ void _read_images(header_info **hList, uint32_t hCount, int totalClasses, int un
     uint32_t hIndex;
     size_t count;
     size_t i;
-    Class *resolvedFutureClasses = nil;
+    Class *resolvedFutureClasses = nil;//存储初始化过的类
     size_t resolvedFutureClassCount = 0;
     static bool doneOnce;
     TimeLogger ts(PrintImageTimes);
@@ -2538,6 +2540,7 @@ void _read_images(header_info **hList, uint32_t hCount, int totalClasses, int un
 
 #endif
 
+        //没有开启taggedPointers，设置相关属性
         if (DisableTaggedPointers) {
             disableTaggedPointers();
         }
@@ -2563,7 +2566,7 @@ void _read_images(header_info **hList, uint32_t hCount, int totalClasses, int un
 
 
     // Discover classes. Fix up unresolved future classes. Mark bundle classes.
-
+    // 以下从section中读取信息,包括:class、protocol、category、sel等。
     for (EACH_HEADER) {
         classref_t *classlist = _getObjc2ClassList(hi, &count);//在section中读取class list
         
