@@ -283,6 +283,8 @@ static UIApplication *_YYSharedApplication() {
     return YES;
 }
 
+#pragma mark - 删除
+
 - (BOOL)_dbDeleteItemWithKey:(NSString *)key {
     NSString *sql = @"delete from manifest where key = ?1;";
     sqlite3_stmt *stmt = [self _dbPrepareStmt:sql];
@@ -366,6 +368,8 @@ static UIApplication *_YYSharedApplication() {
     return item;
 }
 
+#pragma mark - 查询
+//根据key在manifest表查询
 - (YYKVStorageItem *)_dbGetItemWithKey:(NSString *)key excludeInlineData:(BOOL)excludeInlineData {
     NSString *sql = excludeInlineData ? @"select key, filename, size, modification_time, last_access_time, extended_data from manifest where key = ?1;" : @"select key, filename, size, inline_data, modification_time, last_access_time, extended_data from manifest where key = ?1;";
     sqlite3_stmt *stmt = [self _dbPrepareStmt:sql];
@@ -384,6 +388,7 @@ static UIApplication *_YYSharedApplication() {
     return item;
 }
 
+//批量查询keys
 - (NSMutableArray *)_dbGetItemWithKeys:(NSArray *)keys excludeInlineData:(BOOL)excludeInlineData {
     if (![self _dbCheck]) return nil;
     NSString *sql;
@@ -419,6 +424,7 @@ static UIApplication *_YYSharedApplication() {
     return items;
 }
 
+//查询inline_data
 - (NSData *)_dbGetValueWithKey:(NSString *)key {
     NSString *sql = @"select inline_data from manifest where key = ?1;";
     sqlite3_stmt *stmt = [self _dbPrepareStmt:sql];
@@ -438,7 +444,7 @@ static UIApplication *_YYSharedApplication() {
         return nil;
     }
 }
-
+//查询filename
 - (NSString *)_dbGetFilenameWithKey:(NSString *)key {
     NSString *sql = @"select filename from manifest where key = ?1;";
     sqlite3_stmt *stmt = [self _dbPrepareStmt:sql];
@@ -457,7 +463,7 @@ static UIApplication *_YYSharedApplication() {
     }
     return nil;
 }
-
+//批量查询filename
 - (NSMutableArray *)_dbGetFilenameWithKeys:(NSArray *)keys {
     if (![self _dbCheck]) return nil;
     NSString *sql = [NSString stringWithFormat:@"select filename from manifest where key in (%@);", [self _dbJoinedKeys:keys]];
@@ -489,7 +495,7 @@ static UIApplication *_YYSharedApplication() {
     sqlite3_finalize(stmt);
     return filenames;
 }
-
+//过滤文件小于size且filename不为空的filename
 - (NSMutableArray *)_dbGetFilenamesWithSizeLargerThan:(int)size {
     NSString *sql = @"select filename from manifest where size > ?1 and filename is not null;";
     sqlite3_stmt *stmt = [self _dbPrepareStmt:sql];
@@ -515,7 +521,7 @@ static UIApplication *_YYSharedApplication() {
     } while (1);
     return filenames;
 }
-
+//过滤时间小于time的fiename
 - (NSMutableArray *)_dbGetFilenamesWithTimeEarlierThan:(int)time {
     NSString *sql = @"select filename from manifest where last_access_time < ?1 and filename is not null;";
     sqlite3_stmt *stmt = [self _dbPrepareStmt:sql];
@@ -541,7 +547,7 @@ static UIApplication *_YYSharedApplication() {
     } while (1);
     return filenames;
 }
-
+//过滤count
 - (NSMutableArray *)_dbGetItemSizeInfoOrderByTimeAscWithLimit:(int)count {
     NSString *sql = @"select key, filename, size from manifest order by last_access_time asc limit ?1;";
     sqlite3_stmt *stmt = [self _dbPrepareStmt:sql];
@@ -573,7 +579,7 @@ static UIApplication *_YYSharedApplication() {
     } while (1);
     return items;
 }
-
+//统计key个数
 - (int)_dbGetItemCountWithKey:(NSString *)key {
     NSString *sql = @"select count(key) from manifest where key = ?1;";
     sqlite3_stmt *stmt = [self _dbPrepareStmt:sql];
@@ -586,7 +592,7 @@ static UIApplication *_YYSharedApplication() {
     }
     return sqlite3_column_int(stmt, 0);
 }
-
+//获取所有size大小
 - (int)_dbGetTotalItemSize {
     NSString *sql = @"select sum(size) from manifest;";
     sqlite3_stmt *stmt = [self _dbPrepareStmt:sql];
@@ -598,7 +604,7 @@ static UIApplication *_YYSharedApplication() {
     }
     return sqlite3_column_int(stmt, 0);
 }
-
+//查询count
 - (int)_dbGetTotalItemCount {
     NSString *sql = @"select count(*) from manifest;";
     sqlite3_stmt *stmt = [self _dbPrepareStmt:sql];
@@ -735,6 +741,8 @@ static UIApplication *_YYSharedApplication() {
     }
 }
 
+#pragma mark -  save
+
 - (BOOL)saveItem:(YYKVStorageItem *)item {
     return [self saveItemWithKey:item.key value:item.value filename:item.filename extendedData:item.extendedData];
 }
@@ -768,6 +776,8 @@ static UIApplication *_YYSharedApplication() {
         return [self _dbSaveWithKey:key value:value fileName:nil extendedData:extendedData];
     }
 }
+
+#pragma mark - remove
 
 - (BOOL)removeItemForKey:(NSString *)key {
     if (key.length == 0) return NO;
@@ -957,11 +967,13 @@ static UIApplication *_YYSharedApplication() {
     }
 }
 
+#pragma mark - get
+
 - (YYKVStorageItem *)getItemForKey:(NSString *)key {
     if (key.length == 0) return nil;
     YYKVStorageItem *item = [self _dbGetItemWithKey:key excludeInlineData:NO];
     if (item) {
-        [self _dbUpdateAccessTimeWithKey:key];
+        [self _dbUpdateAccessTimeWithKey:key];//使用后需要更新时间
         if (item.filename) {
             item.value = [self _fileReadWithName:item.filename];
             if (!item.value) {

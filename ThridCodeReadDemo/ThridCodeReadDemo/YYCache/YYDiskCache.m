@@ -215,6 +215,8 @@ static void _YYDiskCacheSetGlobal(YYDiskCache *cache) {
     return self;
 }
 
+#pragma mark - 缓存是否包含key
+
 - (BOOL)containsObjectForKey:(NSString *)key {
     if (!key) return NO;
     Lock();
@@ -233,6 +235,8 @@ static void _YYDiskCacheSetGlobal(YYDiskCache *cache) {
     });
 }
 
+#pragma mark - 获取value
+
 - (id<NSCoding>)objectForKey:(NSString *)key {
     if (!key) return nil;
     Lock();
@@ -245,7 +249,7 @@ static void _YYDiskCacheSetGlobal(YYDiskCache *cache) {
         object = _customUnarchiveBlock(item.value);
     } else {
         @try {
-            object = [NSKeyedUnarchiver unarchiveObjectWithData:item.value];
+            object = [NSKeyedUnarchiver unarchiveObjectWithData:item.value];//data转成对象
         }
         @catch (NSException *exception) {
             // nothing to do...
@@ -266,6 +270,8 @@ static void _YYDiskCacheSetGlobal(YYDiskCache *cache) {
         block(key, object);
     });
 }
+
+#pragma mark - 设置key\value
 
 - (void)setObject:(id<NSCoding>)object forKey:(NSString *)key {
     if (!key) return;
@@ -307,6 +313,8 @@ static void _YYDiskCacheSetGlobal(YYDiskCache *cache) {
         if (block) block();
     });
 }
+
+#pragma mark - remove
 
 - (void)removeObjectForKey:(NSString *)key {
     if (!key) return;
@@ -354,6 +362,8 @@ static void _YYDiskCacheSetGlobal(YYDiskCache *cache) {
     });
 }
 
+#pragma mark - total
+
 - (NSInteger)totalCount {
     Lock();
     int count = [_kv getItemsCount];
@@ -387,6 +397,8 @@ static void _YYDiskCacheSetGlobal(YYDiskCache *cache) {
         block(totalCost);
     });
 }
+
+#pragma mark - trim
 
 - (void)trimToCount:(NSUInteger)count {
     Lock();
@@ -432,6 +444,8 @@ static void _YYDiskCacheSetGlobal(YYDiskCache *cache) {
         if (block) block();
     });
 }
+
+#pragma mark - ExtendedData
 
 + (NSData *)getExtendedDataFromObject:(id)object {
     if (!object) return nil;
