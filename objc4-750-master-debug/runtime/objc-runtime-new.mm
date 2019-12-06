@@ -179,6 +179,7 @@ const uintptr_t objc_debug_isa_magic_value = 0;
 * allocatedClasses
 * A table of all classes (and metaclasses) which have been allocated
 * with objc_allocateClassPair.
+ 用objc_allocateClassPair分配的所有类(和元类)的表
 **********************************************************************/
 static NXHashTable *allocatedClasses = nil;
 
@@ -1118,6 +1119,7 @@ static char *copySwiftV1MangledName(const char *string, bool isProtocol = false)
 // named classes not in the dyld shared cache, whether realized or not.
 NXMapTable *gdb_objc_realized_classes;  // exported for debuggers in objc-gdb.h
 
+//根据name取出Class指针
 static Class getClass_impl(const char *name)
 {
     runtimeLock.assertLocked();
@@ -1126,13 +1128,14 @@ static Class getClass_impl(const char *name)
     assert(gdb_objc_realized_classes);
 
     // Try runtime-allocated table
+    // 从table中取出key = name的value
     Class result = (Class)NXMapGet(gdb_objc_realized_classes, name);
     if (result) return result;
 
     // Try table from dyld shared cache
     return getPreoptimizedClass(name);
 }
-
+//根据name取出Class指针
 static Class getClass(const char *name)
 {
     runtimeLock.assertLocked();
@@ -1167,6 +1170,7 @@ static void addNamedClass(Class cls, const char *name, Class replacing = nil)
 
         // getNonMetaClass uses name lookups. Classes not found by name 
         // lookup must be in the secondary meta->nonmeta table.
+        //getNonMetaClass使用名称查找。没有通过名称查找找到的类必须在次元->非元表中
         addNonMetaClass(cls);
     } else {
         NXMapInsert(gdb_objc_realized_classes, name, cls);//存储类名和指针
@@ -1271,7 +1275,7 @@ static void addFutureNamedClass(const char *name, Class cls)
 /***********************************************************************
 * popFutureNamedClass
 * Removes the named class from the unrealized future class list, 
-* because it has been realized.
+* because it has been realized.(从未实现的未来类列表中删除已命名类，因为它已实现。)
 * Returns nil if the name is not used by a future class.
 * Locking: runtimeLock must be held by the caller
 **********************************************************************/
@@ -1282,9 +1286,9 @@ static Class popFutureNamedClass(const char *name)
     Class cls = nil;
 
     if (future_named_class_map) {
-        cls = (Class)NXMapKeyFreeingRemove(future_named_class_map, name);
+        cls = (Class)NXMapKeyFreeingRemove(future_named_class_map, name);//移除
         if (cls && NXCountMapTable(future_named_class_map) == 0) {
-            NXFreeMapTable(future_named_class_map);
+            NXFreeMapTable(future_named_class_map);//释放
             future_named_class_map = nil;
         }
     }
@@ -1339,7 +1343,7 @@ static bool noClassesRemapped(void)
 /***********************************************************************
 * addRemappedClass
 * newcls is a realized future class, replacing oldcls.
-* OR newcls is nil, replacing ignored weak-linked class oldcls.
+* OR newcls is nil, replacing ignored weak-linked class oldcls.(或者newcls是nil，替换被忽略的弱链接类oldcls)
 * Locking: runtimeLock must be write-locked by the caller
 **********************************************************************/
 static void addRemappedClass(Class oldcls, Class newcls)
@@ -1360,7 +1364,7 @@ static void addRemappedClass(Class oldcls, Class newcls)
 /***********************************************************************
 * remapClass
 * Returns the live class pointer for cls, which may be pointing to 
-* a class struct that has been reallocated.
+* a class struct that has been reallocated.(返回已存活的cls类指针，它可能指向已重新分配的类结构)
 * Returns nil if cls is ignored because of weak linking.
 * Locking: runtimeLock must be read- or write-locked by the caller
 **********************************************************************/
@@ -1368,11 +1372,12 @@ static Class remapClass(Class cls)
 {
     runtimeLock.assertLocked();
 
-    Class c2;
+    Class c2;//指针地址的形式从NXMapMember取值
 
     if (!cls) return nil;
 
     NXMapTable *map = remappedClasses(NO);
+    //如果cls的key是存在的，取出对应的value赋值给c2
     if (!map  ||  NXMapMember(map, cls, (void**)&c2) == NX_MAPNOTAKEY) {
         return cls;
     } else {
@@ -1393,7 +1398,7 @@ Class _class_remap(Class cls)
 
 /***********************************************************************
 * remapClassRef
-* Fix up a class ref, in case the class referenced has been reallocated 
+* Fix up a class ref, in case the class referenced has been reallocated (修复一个类引用，以防引用的类被重新分配)
 * or is an ignored weak-linked class.
 * Locking: runtimeLock must be read- or write-locked by the caller
 **********************************************************************/
@@ -1995,6 +2000,7 @@ static Class realizeClass(Class cls)
 /***********************************************************************
 * missingWeakSuperclass
 * Return YES if some superclass of cls was weak-linked and is missing.
+ 如果某个cls的超类是弱链接的并且丢失了，则返回YES
 **********************************************************************/
 static bool 
 missingWeakSuperclass(Class cls)
@@ -2299,7 +2305,7 @@ Class readClass(Class cls, bool headerIsBundle, bool headerIsPreoptimized)
                          "missing weak-linked superclass", 
                          cls->nameForLogging());
         }
-        addRemappedClass(cls, nil);
+        addRemappedClass(cls, nil);//重新映射cls，把cls插入到NXMapTable中
         cls->superclass = nil;
         return nil;
     }
@@ -2335,12 +2341,12 @@ Class readClass(Class cls, bool headerIsBundle, bool headerIsPreoptimized)
         class_rw_t *rw = newCls->data();
         const class_ro_t *old_ro = rw->ro;
         memcpy(newCls, cls, sizeof(objc_class));
-        rw->ro = (class_ro_t *)newCls->data();
+        rw->ro = (class_ro_t *)newCls->data();//给rw.ro赋值
         newCls->setData(rw);
         freeIfMutable((char *)old_ro->name);
         free((void *)old_ro);
         
-        addRemappedClass(cls, newCls);
+        addRemappedClass(cls, newCls);//替换newCls
         
         replacing = cls;
         cls = newCls;
@@ -2352,7 +2358,7 @@ Class readClass(Class cls, bool headerIsBundle, bool headerIsPreoptimized)
         // assert(cls == getClass(name));
         assert(getClass(mangledName));
     } else {
-        addNamedClass(cls, mangledName, replacing);
+        addNamedClass(cls, mangledName, replacing);//
         addClassTableEntry(cls);
     }
 
@@ -2607,7 +2613,7 @@ void _read_images(header_info **hList, uint32_t hCount, int totalClasses, int un
                 remapClassRef(&classrefs[i]);
             }
             // fixme why doesn't test future1 catch the absence of this?
-            classrefs = _getObjc2SuperRefs(hi, &count);
+            classrefs = _getObjc2SuperRefs(hi, &count);//处理父类引用信息
             for (i = 0; i < count; i++) {
                 remapClassRef(&classrefs[i]);
             }

@@ -254,29 +254,29 @@ static void validateKey(NXMapTable *table, MapPair *pair,
          pair2->key, pair2->value, pair3->key, pair3->value);
 #endif
 }
-
+//返回key:检查key是否存在，并赋值value
 static INLINE void *_NXMapMember(NXMapTable *table, const void *key, void **value) {
     MapPair	*pairs = (MapPair *)table->buckets;
     unsigned	index = bucketOf(table, key);
     MapPair	*pair = pairs + index;
-    if (pair->key == NX_MAPNOTAKEY) return NX_MAPNOTAKEY;
+    if (pair->key == NX_MAPNOTAKEY) return NX_MAPNOTAKEY;//key不存在，返回-1
     validateKey(table, pair, index, index);
 
-    if (isEqual(table, pair->key, key)) {
-	*value = (void *)pair->value;
-	return (void *)pair->key;
+    if (isEqual(table, pair->key, key)) {//pair->key==key
+        *value = (void *)pair->value;//赋值value
+        return (void *)pair->key;
     } else {
-	unsigned	index2 = index;
-	while ((index2 = nextIndex(table, index2)) != index) {
-	    pair = pairs + index2;
-	    if (pair->key == NX_MAPNOTAKEY) return NX_MAPNOTAKEY;
-	    validateKey(table, pair, index, index2);
-	    if (isEqual(table, pair->key, key)) {
-	    	*value = (void *)pair->value;
-		return (void *)pair->key;
-	    }
-	}
-	return NX_MAPNOTAKEY;
+        unsigned	index2 = index;
+        while ((index2 = nextIndex(table, index2)) != index) {
+            pair = pairs + index2;
+            if (pair->key == NX_MAPNOTAKEY) return NX_MAPNOTAKEY;
+            validateKey(table, pair, index, index2);
+            if (isEqual(table, pair->key, key)) {
+                *value = (void *)pair->value;//赋值value
+                return (void *)pair->key;
+            }
+        }
+        return NX_MAPNOTAKEY;
     }
 }
 
@@ -315,45 +315,45 @@ void *NXMapInsert(NXMapTable *table, const void *key, const void *value) {
     unsigned	index = bucketOf(table, key);
     MapPair	*pair = pairs + index;
     if (key == NX_MAPNOTAKEY) {
-	_objc_inform("*** NXMapInsert: invalid key: -1\n");
-	return NULL;
+        _objc_inform("*** NXMapInsert: invalid key: -1\n");
+        return NULL;
     }
 
     unsigned numBuckets = table->nbBucketsMinusOne + 1;
 
-    if (pair->key == NX_MAPNOTAKEY) {
-	pair->key = key; pair->value = value;
-	table->count++;
-	if (table->count * 4 > numBuckets * 3) _NXMapRehash(table);
-	return NULL;
+    if (pair->key == NX_MAPNOTAKEY) {//pair为空
+        pair->key = key; pair->value = value;
+        table->count++;
+        if (table->count * 4 > numBuckets * 3) _NXMapRehash(table);
+        return NULL;
     }
     
     if (isEqual(table, pair->key, key)) {
-	const void	*old = pair->value;
-	if (old != value) pair->value = value;/* avoid writing unless needed! */
-	return (void *)old;
+        const void	*old = pair->value;
+        if (old != value) pair->value = value;/* avoid writing unless needed! */
+        return (void *)old;
     } else if (table->count == numBuckets) {
-	/* no room: rehash and retry */
-	_NXMapRehash(table);
-	return NXMapInsert(table, key, value);
+        /* no room: rehash and retry */
+        _NXMapRehash(table);
+        return NXMapInsert(table, key, value);
     } else {
-	unsigned	index2 = index;
-	while ((index2 = nextIndex(table, index2)) != index) {
-	    pair = pairs + index2;
-	    if (pair->key == NX_MAPNOTAKEY) {
-		pair->key = key; pair->value = value;
-		table->count++;
-		if (table->count * 4 > numBuckets * 3) _NXMapRehash(table);
-		return NULL;
-	    }
-	    if (isEqual(table, pair->key, key)) {
-		const void	*old = pair->value;
-		if (old != value) pair->value = value;/* avoid writing unless needed! */
-		return (void *)old;
-	    }
-	}
-	/* no room: can't happen! */
-	_objc_inform("**** NXMapInsert: bug\n");
+        unsigned	index2 = index;
+        while ((index2 = nextIndex(table, index2)) != index) {
+            pair = pairs + index2;
+            if (pair->key == NX_MAPNOTAKEY) {
+            pair->key = key; pair->value = value;
+            table->count++;
+            if (table->count * 4 > numBuckets * 3) _NXMapRehash(table);
+            return NULL;
+            }
+            if (isEqual(table, pair->key, key)) {
+            const void	*old = pair->value;
+            if (old != value) pair->value = value;/* avoid writing unless needed! */
+            return (void *)old;
+            }
+        }
+        /* no room: can't happen! */
+        _objc_inform("**** NXMapInsert: bug\n");
 	return NULL;
     }
 }

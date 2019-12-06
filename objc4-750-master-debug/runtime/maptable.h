@@ -45,9 +45,13 @@ __BEGIN_DECLS
 /***************	Definitions		***************/
 
     /* This module allows hashing of arbitrary associations [key -> value].  Keys and values must be pointers or integers, and client is responsible for allocating/deallocating this data.  A deallocation call-back is provided.
+     这个模块允许散列任意的关联[键->值]。键和值必须是指针或整数，客户端负责分配/释放这些数据。提供了一个deallocation回调。
     NX_MAPNOTAKEY (-1) is used internally as a marker, and therefore keys must always be different from -1.
-    As well-behaved scalable data structures, hash tables double in size when they start becoming full, thus guaranteeing both average constant time access and linear size. */
-
+     NX_MAPNOTAKEY(-1)在内部用作标记，因此键必须始终与-1不同。
+    As well-behaved scalable data structures, hash tables double in size when they start becoming full, thus guaranteeing both average constant time access and linear size.
+     作为表现良好的可伸缩数据结构，当哈希表开始满员时，哈希表的大小将翻倍，从而保证了平均常数时间访问和线性大小。
+     */
+//暂时发现使用到的地方:载入cls
 typedef struct _NXMapTable {
     /* private data structure; may change */
     const struct _NXMapTablePrototype	* _Nonnull prototype;

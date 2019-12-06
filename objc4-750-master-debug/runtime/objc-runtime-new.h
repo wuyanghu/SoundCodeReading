@@ -550,7 +550,7 @@ struct locstamped_category_list_t {
 static_assert(FAST_IS_SWIFT_LEGACY == 1, "resistance is futile");
 static_assert(FAST_IS_SWIFT_STABLE == 2, "resistance is futile");
 
-
+//存放了编译就确定了的属性/成员变量/方法等
 struct class_ro_t {
     uint32_t flags;
     uint32_t instanceStart;
@@ -829,7 +829,7 @@ class protocol_array_t :
     }
 };
 
-
+//类信息
 struct class_rw_t {
     // Be warned that Symbolication knows the layout of this structure.
     uint32_t flags;
@@ -837,12 +837,12 @@ struct class_rw_t {
 
     const class_ro_t *ro;
 
-    method_array_t methods;
-    property_array_t properties;
-    protocol_array_t protocols;
+    method_array_t methods;//方法
+    property_array_t properties;//属性
+    protocol_array_t protocols;//协议
 
-    Class firstSubclass;
-    Class nextSiblingClass;
+    Class firstSubclass;//第一个子类
+    Class nextSiblingClass;//下一个兄妹节点(在处理一个棵树)
 
     char *demangledName;
 
@@ -1272,11 +1272,12 @@ struct objc_class : objc_object {
     IMP getLoadMethod();
 
     // Locking: To prevent concurrent realization, hold runtimeLock.
+    //  为了防止并发实现，持有runtimeLock
     bool isRealized() {
         return data()->flags & RW_REALIZED;
     }
 
-    // Returns true if this is an unrealized future class.
+    // Returns true if this is an unrealized future class.(可以理解为未处理的类吗？)
     // Locking: To prevent concurrent realization, hold runtimeLock.
     bool isFuture() { 
         return data()->flags & RW_FUTURE;
