@@ -495,7 +495,8 @@ static UIApplication *_YYSharedApplication() {
     sqlite3_finalize(stmt);
     return filenames;
 }
-//过滤文件小于size且filename不为空的filename
+
+//过滤出大于size的文件
 - (NSMutableArray *)_dbGetFilenamesWithSizeLargerThan:(int)size {
     NSString *sql = @"select filename from manifest where size > ?1 and filename is not null;";
     sqlite3_stmt *stmt = [self _dbPrepareStmt:sql];
@@ -521,7 +522,7 @@ static UIApplication *_YYSharedApplication() {
     } while (1);
     return filenames;
 }
-//过滤时间小于time的fiename
+//过滤时间小于time的fiename，清除过期数据
 - (NSMutableArray *)_dbGetFilenamesWithTimeEarlierThan:(int)time {
     NSString *sql = @"select filename from manifest where last_access_time < ?1 and filename is not null;";
     sqlite3_stmt *stmt = [self _dbPrepareStmt:sql];
@@ -815,6 +816,7 @@ static UIApplication *_YYSharedApplication() {
     }
 }
 
+//移除大文件
 - (BOOL)removeItemsLargerThanSize:(int)size {
     if (size == INT_MAX) return YES;
     if (size <= 0) return [self removeAllItems];
