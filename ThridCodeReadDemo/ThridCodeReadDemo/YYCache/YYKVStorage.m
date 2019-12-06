@@ -219,8 +219,9 @@ static UIApplication *_YYSharedApplication() {
         sqlite3_bind_text(stmt, index + i, key.UTF8String, -1, NULL);
     }
 }
-
+//保存到manifest数据库
 - (BOOL)_dbSaveWithKey:(NSString *)key value:(NSData *)value fileName:(NSString *)fileName extendedData:(NSData *)extendedData {
+    //insert or replace into 这个写法方便:可参考https://www.jianshu.com/p/bfa617a0b9b1
     NSString *sql = @"insert or replace into manifest (key, filename, size, inline_data, modification_time, last_access_time, extended_data) values (?1, ?2, ?3, ?4, ?5, ?6, ?7);";
     sqlite3_stmt *stmt = [self _dbPrepareStmt:sql];
     if (!stmt) return NO;
@@ -741,7 +742,7 @@ static UIApplication *_YYSharedApplication() {
 - (BOOL)saveItemWithKey:(NSString *)key value:(NSData *)value {
     return [self saveItemWithKey:key value:value filename:nil extendedData:nil];
 }
-
+//保存key,value到数据库
 - (BOOL)saveItemWithKey:(NSString *)key value:(NSData *)value filename:(NSString *)filename extendedData:(NSData *)extendedData {
     if (key.length == 0 || value.length == 0) return NO;
     if (_type == YYKVStorageTypeFile && filename.length == 0) {

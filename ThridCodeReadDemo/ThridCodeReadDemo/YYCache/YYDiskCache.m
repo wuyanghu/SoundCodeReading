@@ -46,10 +46,15 @@ static NSString *_YYNSStringMD5(NSString *string) {
             ];
 }
 
+#pragma mark - 按路径存储cache
 /// weak reference for all instances
 static NSMapTable *_globalInstances;
 static dispatch_semaphore_t _globalInstancesLock;
 
+/*
+ YYKit学习笔记之NSHashTable与NSMapTable:https://www.jianshu.com/p/cf4e15b26f64
+ NSMapTable可以持有键和值的弱引用，当键或值当中的一个被释放时，整个这一项就会被移除掉
+ */
 static void _YYDiskCacheInitGlobal() {
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
@@ -76,6 +81,7 @@ static void _YYDiskCacheSetGlobal(YYDiskCache *cache) {
 }
 
 
+#pragma mark - YYDiskCache
 
 @implementation YYDiskCache {
     YYKVStorage *_kv;
@@ -274,7 +280,7 @@ static void _YYDiskCacheSetGlobal(YYDiskCache *cache) {
         value = _customArchiveBlock(object);
     } else {
         @try {
-            value = [NSKeyedArchiver archivedDataWithRootObject:object];
+            value = [NSKeyedArchiver archivedDataWithRootObject:object];//转成NSData
         }
         @catch (NSException *exception) {
             // nothing to do...

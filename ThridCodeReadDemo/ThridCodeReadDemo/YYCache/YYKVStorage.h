@@ -46,13 +46,13 @@ NS_ASSUME_NONNULL_BEGIN
 typedef NS_ENUM(NSUInteger, YYKVStorageType) {
     
     /// The `value` is stored as a file in file system.
-    YYKVStorageTypeFile = 0,
+    YYKVStorageTypeFile = 0,//默认路径
     
     /// The `value` is stored in sqlite with blob type.
     YYKVStorageTypeSQLite = 1,
     
     /// The `value` is stored in file system or sqlite based on your choice.
-    YYKVStorageTypeMixed = 2,
+    YYKVStorageTypeMixed = 2,//自定义路径:包括name和path
 };
 
 
