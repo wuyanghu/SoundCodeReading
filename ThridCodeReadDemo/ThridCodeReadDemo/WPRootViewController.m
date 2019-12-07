@@ -6,17 +6,18 @@
 //  Copyright © 2019 wupeng. All rights reserved.
 //
 
-#import "ViewController.h"
+#import "WPRootViewController.h"
 
-@interface ViewController ()
+@interface WPRootViewController ()
 
 @end
 
-@implementation ViewController
+@implementation WPRootViewController
 
 - (void)viewDidLoad {
     [super viewDidLoad];
     // Do any additional setup after loading the view.
+    
 }
 
 

@@ -7,8 +7,8 @@
 //
 
 #import <UIKit/UIKit.h>
-
-@interface ViewController : UIViewController
+#import "BaseSectionTableViewViewController.h"
+@interface WPRootViewController : BaseSectionTableViewViewController
 
 
 @end

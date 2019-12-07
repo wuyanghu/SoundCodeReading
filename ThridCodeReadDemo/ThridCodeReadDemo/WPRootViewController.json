@@ -1,0 +1,16 @@
+{
+    "title":[
+        "第三方源码阅读"
+    ],
+    "content":[
+        [
+            {
+                "title":"Masonry源码阅读",
+                "desc":"1.没有添加view,就使用了masonry布局。为什么会崩溃?\n2.调用left.equalTo方法后不能继续设置width?\n3.为什么mas_updateConstraints只能对已存在的约束更新？如果是不存在的约束控制台会为什么会报错?\n4.1同一个view使用多个mas_makeConstraints会不会有问题？为什么？\n4.2接着问题4.1，什么时候需要分开写呢？\n5.make约束完后什么时候能取到正确的frame?\n6.怎么获取已经使用约束的值?",
+                "classname":"WPMasonryCodeReadViewController",
+            }
+        ]
+    ]
+}
+
+
