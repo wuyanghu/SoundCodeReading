@@ -213,7 +213,6 @@
 			isa = PBXGroup;
 			children = (
 				76127A04239B851600D9E030 /* AFNetworking.h */,
-				76127A08239B851600D9E030 /* UIKit+AFNetworking */,
 				76127A1D239B851600D9E030 /* AFNetworking */,
 			);
 			path = AFNetworking;
@@ -249,21 +248,54 @@
 		76127A1D239B851600D9E030 /* AFNetworking */ = {
 			isa = PBXGroup;
 			children = (
+				76127A45239B857000D9E030 /* AFNetworking.h */,
+				76127A72239B85FF00D9E030 /* NSURLSession */,
+				76127A73239B861700D9E030 /* Reachability */,
+				76127A74239B862500D9E030 /* Security */,
+				76127A75239B863200D9E030 /* Serialization */,
+				76127A08239B851600D9E030 /* UIKit+AFNetworking */,
+			);
+			path = AFNetworking;
+			sourceTree = "<group>";
+		};
+		76127A72239B85FF00D9E030 /* NSURLSession */ = {
+			isa = PBXGroup;
+			children = (
 				76127A49239B857000D9E030 /* AFHTTPSessionManager.h */,
 				76127A47239B857000D9E030 /* AFHTTPSessionManager.m */,
-				76127A45239B857000D9E030 /* AFNetworking.h */,
+				76127A43239B857000D9E030 /* AFURLSessionManager.h */,
+				76127A4D239B857100D9E030 /* AFURLSessionManager.m */,
+			);
+			path = NSURLSession;
+			sourceTree = "<group>";
+		};
+		76127A73239B861700D9E030 /* Reachability */ = {
+			isa = PBXGroup;
+			children = (
 				76127A4C239B857100D9E030 /* AFNetworkReachabilityManager.h */,
 				76127A4A239B857100D9E030 /* AFNetworkReachabilityManager.m */,
+			);
+			path = Reachability;
+			sourceTree = "<group>";
+		};
+		76127A74239B862500D9E030 /* Security */ = {
+			isa = PBXGroup;
+			children = (
 				76127A4B239B857100D9E030 /* AFSecurityPolicy.h */,
 				76127A44239B857000D9E030 /* AFSecurityPolicy.m */,
+			);
+			path = Security;
+			sourceTree = "<group>";
+		};
+		76127A75239B863200D9E030 /* Serialization */ = {
+			isa = PBXGroup;
+			children = (
 				76127A48239B857000D9E030 /* AFURLRequestSerialization.h */,
 				76127A46239B857000D9E030 /* AFURLRequestSerialization.m */,
 				76127A42239B857000D9E030 /* AFURLResponseSerialization.h */,
 				76127A4E239B857100D9E030 /* AFURLResponseSerialization.m */,
-				76127A43239B857000D9E030 /* AFURLSessionManager.h */,
-				76127A4D239B857100D9E030 /* AFURLSessionManager.m */,
 			);
-			path = AFNetworking;
+			name = Serialization;
 			sourceTree = "<group>";
 		};
 		76DFBE652377D32D0092DDF9 = {
