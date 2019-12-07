@@ -125,7 +125,7 @@ BOOL sel_isMapped(SEL sel)
     return false;
 }
 
-
+//根据name查找SEL()
 static SEL search_builtins(const char *name) 
 {
 #if SUPPORT_PREOPT
@@ -149,7 +149,7 @@ static SEL __sel_registerName(const char *name, bool shouldLock, bool copy)
     
     conditional_mutex_locker_t lock(selLock, shouldLock);
     if (namedSelectors) {
-        result = (SEL)NXMapGet(namedSelectors, name);
+        result = (SEL)NXMapGet(namedSelectors, name);//namedSelectors查找
     }
     if (result) return result;
 
@@ -157,9 +157,10 @@ static SEL __sel_registerName(const char *name, bool shouldLock, bool copy)
 
     if (!namedSelectors) {
         namedSelectors = NXCreateMapTable(NXStrValueMapPrototype, 
-                                          (unsigned)SelrefCount);
+                                          (unsigned)SelrefCount);//懒加载
+        //思考:如果语言没有提供iOS这种@property自动生成get、set，可以使用这种方式懒加载
     }
-    if (!result) {
+    if (!result) {//重新分配内存，插入到namedSelectors中
         result = sel_alloc(name, copy);
         // fixme choose a better container (hash not map for starters)
         NXMapInsert(namedSelectors, sel_getName(result), result);

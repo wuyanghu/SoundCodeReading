@@ -321,10 +321,10 @@ void *NXMapInsert(NXMapTable *table, const void *key, const void *value) {
 
     unsigned numBuckets = table->nbBucketsMinusOne + 1;
 
-    if (pair->key == NX_MAPNOTAKEY) {//pair为空
-        pair->key = key; pair->value = value;
+    if (pair->key == NX_MAPNOTAKEY) {//pair->key为空
+        pair->key = key; pair->value = value;//赋值新值
         table->count++;
-        if (table->count * 4 > numBuckets * 3) _NXMapRehash(table);
+        if (table->count * 4 > numBuckets * 3) _NXMapRehash(table);//空间不够重新分配
         return NULL;
     }
     
@@ -359,7 +359,7 @@ void *NXMapInsert(NXMapTable *table, const void *key, const void *value) {
 }
 
 static int mapRemove = 0;
-
+//移除
 void *NXMapRemove(NXMapTable *table, const void *key) {
     MapPair	*pairs = (MapPair *)table->buckets;
     unsigned	index = bucketOf(table, key);

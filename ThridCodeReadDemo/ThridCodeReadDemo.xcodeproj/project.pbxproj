@@ -137,6 +137,13 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		760FA3AF239A78C300C0C992 /* AFNetworking */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = AFNetworking;
+			sourceTree = "<group>";
+		};
 		76102DD723992E5A0094230D /* YYCache */ = {
 			isa = PBXGroup;
 			children = (
@@ -179,6 +186,7 @@
 				76DFBE722377D32D0092DDF9 /* AppDelegate.m */,
 				76DFBE742377D32D0092DDF9 /* ViewController.h */,
 				76DFBE752377D32D0092DDF9 /* ViewController.m */,
+				760FA3AF239A78C300C0C992 /* AFNetworking */,
 				76102DD723992E5A0094230D /* YYCache */,
 				76DFBEC72377D3720092DDF9 /* FDTemplateLayoutCell */,
 				76DFBEA32377D34E0092DDF9 /* Masonry */,

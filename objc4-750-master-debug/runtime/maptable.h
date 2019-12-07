@@ -51,13 +51,13 @@ __BEGIN_DECLS
     As well-behaved scalable data structures, hash tables double in size when they start becoming full, thus guaranteeing both average constant time access and linear size.
      作为表现良好的可伸缩数据结构，当哈希表开始满员时，哈希表的大小将翻倍，从而保证了平均常数时间访问和线性大小。
      */
-//暂时发现使用到的地方:载入cls
+
 typedef struct _NXMapTable {
     /* private data structure; may change */
     const struct _NXMapTablePrototype	* _Nonnull prototype;
     unsigned	count;
     unsigned	nbBucketsMinusOne;
-    void	* _Nullable buckets;
+    void	* _Nullable buckets;//存放MapPair
 } NXMapTable OBJC_MAP_AVAILABILITY;
 
 typedef struct _NXMapTablePrototype {

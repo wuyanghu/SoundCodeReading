@@ -413,9 +413,9 @@ struct locstamped_category_list_t {
 #define RO_HAS_WEAK_WITHOUT_ARC (1<<9)
 
 // class is in an unloadable bundle - must never be set by compiler
-#define RO_FROM_BUNDLE        (1<<29)
+#define RO_FROM_BUNDLE        (1<<29)//(类在一个不可加载的包中——编译器永远不能设置它)
 // class is unrealized future class - must never be set by compiler
-#define RO_FUTURE             (1<<30)
+#define RO_FUTURE             (1<<30)//(类是未实现的未来类——编译器永远不能设置它)
 // class is realized - must never be set by compiler
 #define RO_REALIZED           (1<<31)
 
@@ -561,7 +561,7 @@ struct class_ro_t {
 
     const uint8_t * ivarLayout;
     
-    const char * name;
+    const char * name;//类或实例的name
     method_list_t * baseMethodList;
     protocol_list_t * baseProtocols;
     const ivar_list_t * ivars;
@@ -833,7 +833,7 @@ class protocol_array_t :
 struct class_rw_t {
     // Be warned that Symbolication knows the layout of this structure.
     uint32_t flags;
-    uint32_t version;
+    uint32_t version;//元类是7
 
     const class_ro_t *ro;
 
@@ -843,7 +843,8 @@ struct class_rw_t {
 
     Class firstSubclass;//第一个子类
     Class nextSiblingClass;//下一个兄妹节点(在处理一个棵树)
-
+    //处理父类与子类的关系，每个类都是一棵子树,NSObject是根
+    
     char *demangledName;
 
 #if SUPPORT_INDEXED_ISA

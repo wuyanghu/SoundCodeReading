@@ -342,7 +342,7 @@ extern int dyld_shared_cache_find_iterate_text(const uuid_t cacheUuid, const cha
 //
 // Returns if the specified address range is in a dyld owned memory
 // that is mapped read-only and will never be unloaded.
-//
+//(如果指定的地址范围位于dyld拥有的内存中，则返回它是只读映射的，并且永远不会被卸载。)
 // Exists in Mac OS X 10.12 and later
 //           iOS 10.0 and later
 extern bool _dyld_is_memory_immutable(const void* addr, size_t length);

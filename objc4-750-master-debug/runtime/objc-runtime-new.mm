@@ -256,7 +256,7 @@ method_list_t **method_array_t::endCategoryMethodLists(Class cls)
     // everything except the last method list.
     return mlistsEnd - 1;
 }
-
+//sel转成name
 static const char *sel_cname(SEL sel)
 {
     return (const char *)(void *)sel;
@@ -369,6 +369,7 @@ static class_ro_t *make_ro_writeable(class_rw_t *rw)
 * unattachedCategories
 * Returns the class => categories map of unattached categories.
 * Locking: runtimeLock must be held by the caller.
+ 分配NXMapTable
 **********************************************************************/
 static NXMapTable *unattachedCategories(void)
 {
@@ -586,7 +587,8 @@ static category_list *
 unattachedCategoriesForClass(Class cls, bool realizing)
 {
     runtimeLock.assertLocked();
-    return (category_list *)NXMapRemove(unattachedCategories(), cls);
+    //疑问:NXMapRemove返回的是void *，可以直接强转成category_list?
+    return (category_list *)NXMapRemove(unattachedCategories(), cls);//从当前未分配类别的NXMapTable移除cls
 }
 
 
@@ -838,7 +840,7 @@ attachCategories(Class cls, category_list *cats, bool flush_caches)
 /***********************************************************************
 * methodizeClass
 * Fixes up cls's method list, protocol list, and property list.
-* Attaches any outstanding categories.
+* Attaches any outstanding categories.(附加任何未完成的类别。)
 * Locking: runtimeLock must be held by the caller
 **********************************************************************/
 static void methodizeClass(Class cls)
@@ -856,32 +858,35 @@ static void methodizeClass(Class cls)
     }
 
     // Install methods and properties that the class implements itself.
+    // (安装类本身实现的方法和属性)
     method_list_t *list = ro->baseMethods();
     if (list) {
         prepareMethodLists(cls, &list, 1, YES, isBundleClass(cls));
-        rw->methods.attachLists(&list, 1);
+        rw->methods.attachLists(&list, 1);//方法
     }
 
     property_list_t *proplist = ro->baseProperties;
     if (proplist) {
-        rw->properties.attachLists(&proplist, 1);
+        rw->properties.attachLists(&proplist, 1);//属性
     }
 
     protocol_list_t *protolist = ro->baseProtocols;
     if (protolist) {
-        rw->protocols.attachLists(&protolist, 1);
+        rw->protocols.attachLists(&protolist, 1);//协议
     }
 
     // Root classes get bonus method implementations if they don't have 
     // them already. These apply before category replacements.
+    // (根类如果还没有方法实现，就会得到额外的方法实现。这些适用于类别替换之前。)
     if (cls->isRootMetaclass()) {
         // root metaclass
         addMethod(cls, SEL_initialize, (IMP)&objc_noop_imp, "", NO);
     }
 
     // Attach categories.
+    //cls从未分配类别移除，并返回对应cls的category_list
     category_list *cats = unattachedCategoriesForClass(cls, true /*realizing*/);
-    attachCategories(cls, cats, false /*don't flush caches*/);
+    attachCategories(cls, cats, false /*don't flush caches*/);//插入类别,也是为什么类别会优先调用实例或类方法
 
     if (PrintConnecting) {
         if (cats) {
@@ -1275,7 +1280,7 @@ static void addFutureNamedClass(const char *name, Class cls)
 /***********************************************************************
 * popFutureNamedClass
 * Removes the named class from the unrealized future class list, 
-* because it has been realized.(从未实现的未来类列表中删除已命名类，因为它已实现。)
+* because it has been realized.(从未实现的类列表中移除name class，因为它已实现。)
 * Returns nil if the name is not used by a future class.
 * Locking: runtimeLock must be held by the caller
 **********************************************************************/
@@ -1286,7 +1291,7 @@ static Class popFutureNamedClass(const char *name)
     Class cls = nil;
 
     if (future_named_class_map) {
-        cls = (Class)NXMapKeyFreeingRemove(future_named_class_map, name);//移除
+        cls = (Class)NXMapKeyFreeingRemove(future_named_class_map, name);//移除name class并返回给cls
         if (cls && NXCountMapTable(future_named_class_map) == 0) {
             NXFreeMapTable(future_named_class_map);//释放
             future_named_class_map = nil;
@@ -1367,6 +1372,7 @@ static void addRemappedClass(Class oldcls, Class newcls)
 * a class struct that has been reallocated.(返回已存活的cls类指针，它可能指向已重新分配的类结构)
 * Returns nil if cls is ignored because of weak linking.
 * Locking: runtimeLock must be read- or write-locked by the caller
+ (从字典取值:以cls为key)
 **********************************************************************/
 static Class remapClass(Class cls)
 {
@@ -1642,7 +1648,7 @@ static void removeSubclass(Class supercls, Class subcls)
 }
 
 
-
+#pragma mark - protocols
 /***********************************************************************
 * protocols
 * Returns the protocol name => protocol map for protocols.
@@ -1872,7 +1878,7 @@ static void reconcileInstanceVariables(Class cls, Class supercls, const class_ro
 
 
 /***********************************************************************
-* realizeClass
+ * realizeClass:实现
 * Performs first-time initialization on class cls, 
 * including allocating its read-write data.
 * Returns the real class structure for the class. 
@@ -1897,6 +1903,7 @@ static Class realizeClass(Class cls)
     ro = (const class_ro_t *)cls->data();
     if (ro->flags & RO_FUTURE) {
         // This was a future class. rw data is already allocated.
+        // future class怎么翻译?
         rw = cls->data();
         ro = cls->data()->ro;
         cls->changeInfo(RW_REALIZED|RW_REALIZING, RW_FUTURE);
@@ -1926,13 +1933,13 @@ static Class realizeClass(Class cls)
     // Realize superclass and metaclass, if they aren't already.
     // This needs to be done after RW_REALIZED is set above, for root classes.
     // This needs to be done after class index is chosen, for root metaclasses.
-    supercls = realizeClass(remapClass(cls->superclass));
-    metacls = realizeClass(remapClass(cls->ISA()));
+    supercls = realizeClass(remapClass(cls->superclass));//实现父类
+    metacls = realizeClass(remapClass(cls->ISA()));//通过ISA实现了元类
 
 #if SUPPORT_NONPOINTER_ISA
     // Disable non-pointer isa for some classes and/or platforms.
     // Set instancesRequireRawIsa.
-    bool instancesRequireRawIsa = cls->instancesRequireRawIsa();
+    bool instancesRequireRawIsa = cls->instancesRequireRawIsa();//是否开启isa优化，RW_REQUIRES_RAW_ISA第15位标志位
     bool rawIsaIsInherited = false;
     static bool hackedDispatch = false;
 
@@ -1959,7 +1966,7 @@ static Class realizeClass(Class cls)
     }
     
     if (instancesRequireRawIsa) {
-        cls->setInstancesRequireRawIsa(rawIsaIsInherited);
+        cls->setInstancesRequireRawIsa(rawIsaIsInherited);//触发了flags，设置了第15位的标志位
     }
 // SUPPORT_NONPOINTER_ISA
 #endif
@@ -1968,7 +1975,7 @@ static Class realizeClass(Class cls)
     cls->superclass = supercls;
     cls->initClassIsa(metacls);
 
-    // Reconcile instance variable offsets / layout.
+    // Reconcile instance variable offsets / layout.(协调实例变量的偏移量/布局)
     // This may reallocate class_ro_t, updating our ro variable.
     if (supercls  &&  !isMeta) reconcileInstanceVariables(cls, supercls, ro);
 
@@ -1991,7 +1998,7 @@ static Class realizeClass(Class cls)
     }
 
     // Attach categories
-    methodizeClass(cls);
+    methodizeClass(cls);//附加类别
 
     return cls;
 }
@@ -2295,7 +2302,7 @@ bool mustReadClasses(header_info *hi)
 **********************************************************************/
 Class readClass(Class cls, bool headerIsBundle, bool headerIsPreoptimized)
 {
-    const char *mangledName = cls->mangledName();
+    const char *mangledName = cls->mangledName();//获取name
     
     if (missingWeakSuperclass(cls)) {
         // No superclass (probably weak-linked). 
@@ -2339,13 +2346,18 @@ Class readClass(Class cls, bool headerIsBundle, bool headerIsPreoptimized)
         }
         
         class_rw_t *rw = newCls->data();
-        const class_ro_t *old_ro = rw->ro;
-        memcpy(newCls, cls, sizeof(objc_class));
-        rw->ro = (class_ro_t *)newCls->data();//给rw.ro赋值
-        newCls->setData(rw);
+        const class_ro_t *old_ro = rw->ro;//保存old_ro
+        memcpy(newCls, cls, sizeof(objc_class));//newCls = cls
+        rw->ro = (class_ro_t *)newCls->data();//重新给rw.ro赋值，旧的rw.ro已保存在old_ro中
+        
+        //上面一段逻辑:newCls->data->ro保存在了old_ro中，为什么需要保存?C语言需要手动释放内存
+        //cls是从Mach-o读取出的cls信息,newCls是从popFutureNamedClass(未实现方法出现的信息)
+        newCls->setData(rw);//rw->ro是cls中的信息
+        
         freeIfMutable((char *)old_ro->name);
         free((void *)old_ro);
         
+        //cls中的rw已保存在newCls中
         addRemappedClass(cls, newCls);//替换newCls
         
         replacing = cls;
@@ -2395,7 +2407,7 @@ readProtocol(protocol_t *newproto, Class protocol_class,
                          newproto, oldproto->nameForLogging(), oldproto);
         }
     }
-    else if (headerIsPreoptimized) {
+    else if (headerIsPreoptimized) {//处理共享缓存，暂时用不到
         // Shared cache initialized the protocol object itself, 
         // but in order to allow out-of-cache replacement we need 
         // to add it to the protocol table now.
@@ -2434,7 +2446,7 @@ readProtocol(protocol_t *newproto, Class protocol_class,
         // with sufficient storage. Fix it up in place.
         // fixme duplicate protocols from unloadable bundle
         newproto->initIsa(protocol_class);  // fixme pinned
-        insertFn(protocol_map, newproto->mangledName, newproto);
+        insertFn(protocol_map, newproto->mangledName, newproto);//相当于调用了NXMapInsert
         if (PrintProtocols) {
             _objc_inform("PROTOCOLS: protocol at %p is %s",
                          newproto, newproto->nameForLogging());
@@ -2444,6 +2456,7 @@ readProtocol(protocol_t *newproto, Class protocol_class,
         // New protocol from an un-preoptimized image 
         // with insufficient storage. Reallocate it.
         // fixme duplicate protocols from unloadable bundle
+        // 内存不够重新分配
         size_t size = max(sizeof(protocol_t), (size_t)newproto->size);
         protocol_t *installedproto = (protocol_t *)calloc(size, 1);
         memcpy(installedproto, newproto, newproto->size);
@@ -2530,7 +2543,7 @@ void _read_images(header_info **hList, uint32_t hCount, int totalClasses, int un
         // Disable non-pointer isa if the app has a __DATA,__objc_rawisa section
         // New apps that load old extensions may need this.
         for (EACH_HEADER) {
-            if (hi->mhdr()->filetype != MH_EXECUTE) continue;
+            if (hi->mhdr()->filetype != MH_EXECUTE) continue;//MH_EXECUTE可执行的二进制文件
             unsigned long size;
             //在OSX系统下，Mach-O的DATA段明确指明了__objc_rawisa
             if (getsectiondata(hi->mhdr(), "__DATA", "__objc_rawisa", &size)) {
@@ -2565,7 +2578,7 @@ void _read_images(header_info **hList, uint32_t hCount, int totalClasses, int un
         gdb_objc_realized_classes =
             NXCreateMapTable(NXStrValueMapPrototype, namedClassesSize);
         
-        allocatedClasses = NXCreateHashTable(NXPtrPrototype, 0, nil);
+        allocatedClasses = NXCreateHashTable(NXPtrPrototype, 0, nil);//初始化一个字典
         
         ts.log("IMAGE TIMES: first time tasks");
     }
@@ -2610,7 +2623,7 @@ void _read_images(header_info **hList, uint32_t hCount, int totalClasses, int un
         for (EACH_HEADER) {
             Class *classrefs = _getObjc2ClassRefs(hi, &count);//section中读取class 引用的信息
             for (i = 0; i < count; i++) {
-                remapClassRef(&classrefs[i]);
+                remapClassRef(&classrefs[i]);//从缓存中取值给classrefs[i]
             }
             // fixme why doesn't test future1 catch the absence of this?
             classrefs = _getObjc2SuperRefs(hi, &count);//处理父类引用信息
@@ -2627,10 +2640,10 @@ void _read_images(header_info **hList, uint32_t hCount, int totalClasses, int un
     {
         mutex_locker_t lock(selLock);
         for (EACH_HEADER) {
-            if (hi->isPreoptimized()) continue;
+            if (hi->isPreoptimized()) continue;//共享优化不用处理，已在共享缓存中
             
             bool isBundle = hi->isBundle();
-            SEL *sels = _getObjc2SelectorRefs(hi, &count);//section中读取selector的引用信息
+            SEL *sels = _getObjc2SelectorRefs(hi, &count);//section中读取selector的引用信息:注意sels是数组
             UnfixedSelectors += count;
             for (i = 0; i < count; i++) {
                 const char *name = sel_cname(sels[i]);
@@ -2638,11 +2651,12 @@ void _read_images(header_info **hList, uint32_t hCount, int totalClasses, int un
             }
         }
     }
-
+    //看到这里，大概看明白了:从section读取信息，存到Map中
     ts.log("IMAGE TIMES: fix up selector references");
 
 #if SUPPORT_FIXUP
     // Fix up old objc_msgSend_fixup call sites
+    // 暂时明白，兼容老的objc_msgSend?
     for (EACH_HEADER) {
         message_ref_t *refs = _getObjc2MessageRefs(hi, &count);
         if (count == 0) continue;
@@ -2662,9 +2676,9 @@ void _read_images(header_info **hList, uint32_t hCount, int totalClasses, int un
     // Discover protocols. Fix up protocol refs.
     for (EACH_HEADER) {
         extern objc_class OBJC_CLASS_$_Protocol;
-        Class cls = (Class)&OBJC_CLASS_$_Protocol;
+        Class cls = (Class)&OBJC_CLASS_$_Protocol;//这取cls的原理是什么?
         assert(cls);
-        NXMapTable *protocol_map = protocols();
+        NXMapTable *protocol_map = protocols();//获取协议的MapTable
         bool isPreoptimized = hi->isPreoptimized();
         bool isBundle = hi->isBundle();
 
@@ -2680,6 +2694,7 @@ void _read_images(header_info **hList, uint32_t hCount, int totalClasses, int un
     // Fix up @protocol references
     // Preoptimized images may have the right 
     // answer already but we don't know for sure.
+    // 为什么需要fix up?
     for (EACH_HEADER) {
         protocol_t **protolist = _getObjc2ProtocolRefs(hi, &count);//section中读取protocol的ref信息
         for (i = 0; i < count; i++) {
@@ -2690,6 +2705,8 @@ void _read_images(header_info **hList, uint32_t hCount, int totalClasses, int un
     ts.log("IMAGE TIMES: fix up @protocol references");
 
     // Realize non-lazy classes (for +load methods and static instances)
+    // 实现非惰性类(用于+load方法和静态实例)
+    // 如果使用到的肯定是要加载的，没使用到的也要加载+load和static方法
     for (EACH_HEADER) {
         classref_t *classlist = 
             _getObjc2NonlazyClassList(hi, &count);
@@ -2714,13 +2731,14 @@ void _read_images(header_info **hList, uint32_t hCount, int totalClasses, int un
 #endif
             
             addClassTableEntry(cls);
-            realizeClass(cls);
+            realizeClass(cls);//实现cls
         }
     }
 
     ts.log("IMAGE TIMES: realize non-lazy classes");
 
     // Realize newly-resolved future classes, in case CF manipulates them
+    // (实现新解析的未来类，以防CF操作它们)
     if (resolvedFutureClasses) {
         for (i = 0; i < resolvedFutureClassCount; i++) {
             realizeClass(resolvedFutureClasses[i]);
@@ -2790,10 +2808,10 @@ void _read_images(header_info **hList, uint32_t hCount, int totalClasses, int un
 
     ts.log("IMAGE TIMES: discover categories");
 
-    // Category discovery MUST BE LAST to avoid potential races 
+    // Category discovery MUST BE LAST to avoid potential races
     // when other threads call the new category code before 
     // this thread finishes its fixups.
-
+    //(当其他线程在此线程完成其修复之前调用新类别代码时，类别发现必须放在最后，以避免潜在竞争。)
     // +load handled by prepare_load_methods()
 
     if (DebugNonFragileIvars) {
@@ -2801,7 +2819,7 @@ void _read_images(header_info **hList, uint32_t hCount, int totalClasses, int un
     }
 
 
-    // Print preoptimization statistics
+    // Print preoptimization statistics(打印过程中统计)
     if (PrintPreopt) {
         static unsigned int PreoptTotalMethodLists;
         static unsigned int PreoptOptimizedMethodLists;
@@ -2829,13 +2847,13 @@ void _read_images(header_info **hList, uint32_t hCount, int totalClasses, int un
                 }
                 
                 const method_list_t *mlist;
-                if ((mlist = ((class_ro_t *)cls->data())->baseMethods())) {
+                if ((mlist = ((class_ro_t *)cls->data())->baseMethods())) {//实例
                     PreoptTotalMethodLists++;
                     if (mlist->isFixedUp()) {
                         PreoptOptimizedMethodLists++;
                     }
                 }
-                if ((mlist=((class_ro_t *)cls->ISA()->data())->baseMethods())) {
+                if ((mlist=((class_ro_t *)cls->ISA()->data())->baseMethods())) {//类
                     PreoptTotalMethodLists++;
                     if (mlist->isFixedUp()) {
                         PreoptOptimizedMethodLists++;
