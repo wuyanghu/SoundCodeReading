@@ -978,9 +978,9 @@ typedef struct mach_header headerType;
 typedef struct segment_command segmentType;
 typedef struct section sectionType;
 #else
-typedef struct mach_header_64 headerType;
-typedef struct segment_command_64 segmentType;
-typedef struct section_64 sectionType;
+typedef struct mach_header_64 headerType;//对应Mach64 Header
+typedef struct segment_command_64 segmentType;//Load Commands
+typedef struct section_64 sectionType;//Section64
 #endif
 #define headerIsBundle(hi) (hi->mhdr()->filetype == MH_BUNDLE)
 #define libobjc_header ((headerType *)&_mh_dylib_header)

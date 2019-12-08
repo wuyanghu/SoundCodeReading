@@ -228,9 +228,9 @@ static header_info * addHeader(const headerType *mhdr, const char *path, int &to
 
     // Look for hinfo from the dyld shared cache.
     hi = preoptimizedHinfoForHeader(mhdr);
-    if (hi) {
+    if (hi) {//共享缓存有，直接取
         // Found an hinfo in the dyld shared cache.
-
+        
         // Weed out duplicates.
         if (hi->isLoaded()) {
             return NULL;
@@ -257,7 +257,7 @@ static header_info * addHeader(const headerType *mhdr, const char *path, int &to
 #endif
     }
     else 
-    {
+    {//共享缓存没有，分配内存，追加到链表头指针
         // Didn't find an hinfo in the dyld shared cache.
 
         // Weed out duplicates
@@ -302,7 +302,7 @@ static header_info * addHeader(const headerType *mhdr, const char *path, int &to
     }
 #endif
 
-    appendHeader(hi);
+    appendHeader(hi);//插入链表头部
     
     return hi;
 }
@@ -457,7 +457,7 @@ map_images_nolock(unsigned mhCount, const char * const mhPaths[],
     }
 
 
-    // Find all images with Objective-C metadata.
+    // Find all images with Objective-C metadata.(查找所有带有Objective-C元数据的镜像。)
     hCount = 0;
 
     // Count classes. Size various table based on the total.
@@ -466,9 +466,10 @@ map_images_nolock(unsigned mhCount, const char * const mhPaths[],
     {
         //从section中读取HeaderInfo
         uint32_t i = mhCount;
-        while (i--) {
-            const headerType *mhdr = (const headerType *)mhdrs[i];
+        while (i--) {//为什么倒序?节点是插入链表头部，最后生成的链表正好又是正常顺序
+            const headerType *mhdr = (const headerType *)mhdrs[i];//包含了Header,Commands,Sections
 
+            //查找共享内存,没有则分配内存生成hi节点，插入链表头部,最后返回头指针
             auto hi = addHeader(mhdr, mhPaths[i], totalClasses, unoptimizedTotalClasses);
             if (!hi) {
                 // no objc data in this entry

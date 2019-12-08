@@ -198,7 +198,8 @@ Class objc_getMetaClass(const char *aClassName)
 
 
 /***********************************************************************
-* appendHeader.  Add a newly-constructed header_info to the list. 
+* appendHeader.  Add a newly-constructed header_info to the list.
+ 
 **********************************************************************/
 void appendHeader(header_info *hi)
 {
@@ -212,6 +213,7 @@ void appendHeader(header_info *hi)
     } else {
         if (!LastHeader) {
             // list is not empty, but LastHeader is invalid - recompute it
+            // 容错处理,把LastHeader移到链表尾部
             LastHeader = FirstHeader;
             while (LastHeader->getNext()) LastHeader = LastHeader->getNext();
         }

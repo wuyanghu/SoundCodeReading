@@ -1122,6 +1122,8 @@ static char *copySwiftV1MangledName(const char *string, bool isProtocol = false)
 
 // This is a misnomer: gdb_objc_realized_classes is actually a list of 
 // named classes not in the dyld shared cache, whether realized or not.
+//(这是一个错误的名称:gdb_objc_realized_classes实际上是不在dyld共享缓存中的已命名类的列表，不管是否已实现。)
+// 以类名为key,class为value(类和元类本质都是class,class有isMeta判断)
 NXMapTable *gdb_objc_realized_classes;  // exported for debuggers in objc-gdb.h
 
 //根据name取出Class指针
@@ -2574,9 +2576,9 @@ void _read_images(header_info **hList, uint32_t hCount, int totalClasses, int un
         // Preoptimized classes don't go in this table.
         // 4/3 is NXMapTable's load factor
         int namedClassesSize = 
-            (isPreoptimized() ? unoptimizedTotalClasses : totalClasses) * 4 / 3;
+            (isPreoptimized() ? unoptimizedTotalClasses : totalClasses) * 4 / 3;//4/3分配内存大小
         gdb_objc_realized_classes =
-            NXCreateMapTable(NXStrValueMapPrototype, namedClassesSize);
+            NXCreateMapTable(NXStrValueMapPrototype, namedClassesSize);//这是数组?需要初始化大小
         
         allocatedClasses = NXCreateHashTable(NXPtrPrototype, 0, nil);//初始化一个字典
         
