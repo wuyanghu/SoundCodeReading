@@ -29,12 +29,12 @@
 #include "objc-private.h"
 #include "hashtable2.h"
 
-/* In order to improve efficiency, buckets contain a pointer to an array or directly the data when the array size is 1 */
+/* In order to improve efficiency, buckets contain a pointer to an array or directly the data when the array size is 1 (为了提高效率，bucket包含一个指向数组的指针，或者在数组大小为1时直接指向数据)*/
 typedef union {
     const void	*one;
     const void	**many;
     } oneOrMany;
-    /* an optimization consists of storing directly data when count = 1 */
+    /* an optimization consists of storing directly data when count = 1 (优化包括在count = 1时直接存储数据)*/
     
 typedef struct	{
     unsigned 	count; 
@@ -323,23 +323,24 @@ void *NXHashInsert (NXHashTable *table, const void *data) {
     __unused void *z = ZONE_FROM_PTR(table);
     
     if (! j) {
-	bucket->count++; bucket->elements.one = data; 
-	table->count++; 
-	return NULL;
+        bucket->count++; bucket->elements.one = data;
+        table->count++;
+        return NULL;
 	};
     if (j == 1) {
     	if (ISEQUAL(table, data, bucket->elements.one)) {
 	    const void	*old = bucket->elements.one;
 	    bucket->elements.one = data;
 	    return (void *) old;
-	    };
+    };
+        
 	newt = ALLOCPAIRS(z, 2);
 	newt[1] = bucket->elements.one;
 	*newt = data;
 	bucket->count++; bucket->elements.many = newt; 
 	table->count++; 
 	if (table->count > table->nbBuckets) _NXHashRehash (table);
-	return NULL;
+        return NULL;
 	};
     pairs = bucket->elements.many;
     while (j--) {
@@ -349,7 +350,7 @@ void *NXHashInsert (NXHashTable *table, const void *data) {
 	    *pairs = data;
 	    return (void *) old;
 	    };
-	pairs ++;
+        pairs ++;
 	};
     /* we enlarge this bucket; and put new data in front */
     newt = ALLOCPAIRS(z, bucket->count+1);

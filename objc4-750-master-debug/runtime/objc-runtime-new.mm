@@ -375,7 +375,7 @@ static NXMapTable *unattachedCategories(void)
 {
     runtimeLock.assertLocked();
 
-    static NXMapTable *category_map = nil;
+    static NXMapTable *category_map = nil;//未实现的分类map
 
     if (category_map) return category_map;
 
@@ -501,9 +501,9 @@ static void addClassTableEntry(Class cls, bool addMeta = true) {
     assert(!NXHashMember(allocatedClasses, cls));
 
     if (!isKnownClass(cls))
-        NXHashInsert(allocatedClasses, cls);
+        NXHashInsert(allocatedClasses, cls);//cls存入allocatedClasses
     if (addMeta)
-        addClassTableEntry(cls->ISA(), false);
+        addClassTableEntry(cls->ISA(), false);//元类则把对应的ISA存入allocatedClasses
 }
 
 
@@ -1229,10 +1229,10 @@ unsigned unreasonableClassCount()
 
 /***********************************************************************
 * futureNamedClasses
-* Returns the classname => future class map for unrealized future classes.
+* Returns the classname => future class map for unrealized future classes.(未实现的未来类的未来类映射)
 * Locking: runtimeLock must be held by the caller
 **********************************************************************/
-static NXMapTable *future_named_class_map = nil;
+static NXMapTable *future_named_class_map = nil;//理解为未实现的类
 static NXMapTable *futureNamedClasses()
 {
     runtimeLock.assertLocked();
@@ -1316,13 +1316,13 @@ static NXMapTable *remappedClasses(bool create)
 
     runtimeLock.assertLocked();
 
-    if (remapped_class_map) return remapped_class_map;
+    if (remapped_class_map) return remapped_class_map;//不为空直接return
     if (!create) return nil;
 
     // remapped_class_map is big enough to hold CF's classes and a few others
     INIT_ONCE_PTR(remapped_class_map, 
-                  NXCreateMapTable(NXPtrValueMapPrototype, 32), 
-                  NXFreeMapTable(v));
+                  NXCreateMapTable(NXPtrValueMapPrototype, 32),
+                  NXFreeMapTable(v));//创建remapped_class_map
 
     return remapped_class_map;
 }
@@ -1385,14 +1385,14 @@ static Class remapClass(Class cls)
     if (!cls) return nil;
 
     NXMapTable *map = remappedClasses(NO);
-    //如果cls的key是存在的，取出对应的value赋值给c2
+    //如果cls对应的key是存在的，取出对应的value赋值给c2
     if (!map  ||  NXMapMember(map, cls, (void**)&c2) == NX_MAPNOTAKEY) {
         return cls;
     } else {
         return c2;
     }
 }
-
+//section读取的可能已经初始化并在map中，这时直接获取即可
 static Class remapClass(classref_t cls)
 {
     return remapClass((Class)cls);
@@ -1658,7 +1658,7 @@ static void removeSubclass(Class supercls, Class subcls)
 **********************************************************************/
 static NXMapTable *protocols(void)
 {
-    static NXMapTable *protocol_map = nil;
+    static NXMapTable *protocol_map = nil;//存放协议的map
     
     runtimeLock.assertLocked();
 
@@ -1712,7 +1712,7 @@ static protocol_t *remapProtocol(protocol_ref_t proto)
 
 /***********************************************************************
 * remapProtocolRef
-* Fix up a protocol ref, in case the protocol referenced has been reallocated.
+* Fix up a protocol ref, in case the protocol referenced has been reallocated.(修复一个协议引用，以防引用的协议被重新分配)
 * Locking: runtimeLock must be read- or write-locked by the caller
 **********************************************************************/
 static size_t UnfixedProtocolReferences;
@@ -1880,7 +1880,7 @@ static void reconcileInstanceVariables(Class cls, Class supercls, const class_ro
 
 
 /***********************************************************************
- * realizeClass:实现
+ * realizeClass:实现cls:设置ro、rw,各种标志位,父类、元类,类别等
 * Performs first-time initialization on class cls, 
 * including allocating its read-write data.
 * Returns the real class structure for the class. 
@@ -1935,8 +1935,8 @@ static Class realizeClass(Class cls)
     // Realize superclass and metaclass, if they aren't already.
     // This needs to be done after RW_REALIZED is set above, for root classes.
     // This needs to be done after class index is chosen, for root metaclasses.
-    supercls = realizeClass(remapClass(cls->superclass));//实现父类
-    metacls = realizeClass(remapClass(cls->ISA()));//通过ISA实现了元类
+    supercls = realizeClass(remapClass(cls->superclass));//递归实现父类
+    metacls = realizeClass(remapClass(cls->ISA()));//递归通过ISA实现了元类
 
 #if SUPPORT_NONPOINTER_ISA
     // Disable non-pointer isa for some classes and/or platforms.
@@ -2016,17 +2016,17 @@ missingWeakSuperclass(Class cls)
 {
     assert(!cls->isRealized());
 
-    if (!cls->superclass) {
+    if (!cls->superclass) {//根类的父类为空
         // superclass nil. This is normal for root classes only.
         return (!(cls->data()->flags & RO_ROOT));
     } else {
         // superclass not nil. Check if a higher superclass is missing.
-        Class supercls = remapClass(cls->superclass);
+        Class supercls = remapClass(cls->superclass);//从实现的NXMapTableh中查找
         assert(cls != cls->superclass);
         assert(cls != supercls);
         if (!supercls) return YES;
-        if (supercls->isRealized()) return NO;
-        return missingWeakSuperclass(supercls);
+        if (supercls->isRealized()) return NO;//supercls已经实现，return NO
+        return missingWeakSuperclass(supercls);//递归查找父类
     }
 }
 
@@ -2245,6 +2245,7 @@ unmap_image(const char *path __unused, const struct mach_header *mh)
 /***********************************************************************
 * mustReadClasses
 * Preflight check in advance of readClass() from an image.
+ 不是共享缓存、模拟器、不缺少父类、有未解决的类 返回YES
 **********************************************************************/
 bool mustReadClasses(header_info *hi)
 {
@@ -2264,7 +2265,7 @@ bool mustReadClasses(header_info *hi)
 
     assert(!hi->isBundle());  // no MH_BUNDLE in shared cache
 
-    // If the image may have missing weak superclasses then we must read classes
+    // If the image may have missing weak superclasses then we must read classes(如果image可能缺少弱父类，那么我们必须读取类)
     if (!noMissingWeakSuperclasses()) {
         reason = "the image may contain classes with missing weak superclasses";
         goto readthem;
@@ -2443,7 +2444,7 @@ readProtocol(protocol_t *newproto, Class protocol_class,
             }
         }
     }
-    else if (newproto->size >= sizeof(protocol_t)) {
+    else if (newproto->size >= sizeof(protocol_t)) {//内存够用
         // New protocol from an un-preoptimized image
         // with sufficient storage. Fix it up in place.
         // fixme duplicate protocols from unloadable bundle
@@ -2464,7 +2465,7 @@ readProtocol(protocol_t *newproto, Class protocol_class,
         memcpy(installedproto, newproto, newproto->size);
         installedproto->size = (typeof(installedproto->size))size;
         
-        installedproto->initIsa(protocol_class);  // fixme pinned
+        installedproto->initIsa(protocol_class);  // fixme pinned 协议也是对象吗?
         insertFn(protocol_map, installedproto->mangledName, installedproto);
         if (PrintProtocols) {
             _objc_inform("PROTOCOLS: protocol at %p is %s  ", 
@@ -2618,10 +2619,11 @@ void _read_images(header_info **hList, uint32_t hCount, int totalClasses, int un
     ts.log("IMAGE TIMES: discover classes");
 
     // Fix up remapped classes
-    // Class list and nonlazy class list remain unremapped.
-    // Class refs and super refs are remapped for message dispatching.
+    // Class list and nonlazy class list remain unremapped(类列表和非惰性类列表保持未重映射).
+    // Class refs and super refs are remapped for message dispatching(重映射类引用和超级引用以进行消息分发).
     
     if (!noClassesRemapped()) {
+        //懒加载方式，前面remapped_class_map已被创建，在这里不需要重新映射
         for (EACH_HEADER) {
             Class *classrefs = _getObjc2ClassRefs(hi, &count);//section中读取class 引用的信息
             for (i = 0; i < count; i++) {
@@ -2649,7 +2651,7 @@ void _read_images(header_info **hList, uint32_t hCount, int totalClasses, int un
             UnfixedSelectors += count;
             for (i = 0; i < count; i++) {
                 const char *name = sel_cname(sels[i]);
-                sels[i] = sel_registerNameNoLock(name, isBundle);
+                sels[i] = sel_registerNameNoLock(name, isBundle);//处理方法
             }
         }
     }
@@ -2658,7 +2660,6 @@ void _read_images(header_info **hList, uint32_t hCount, int totalClasses, int un
 
 #if SUPPORT_FIXUP
     // Fix up old objc_msgSend_fixup call sites
-    // 暂时明白，兼容老的objc_msgSend?
     for (EACH_HEADER) {
         message_ref_t *refs = _getObjc2MessageRefs(hi, &count);
         if (count == 0) continue;
@@ -2677,8 +2678,8 @@ void _read_images(header_info **hList, uint32_t hCount, int totalClasses, int un
 
     // Discover protocols. Fix up protocol refs.
     for (EACH_HEADER) {
-        extern objc_class OBJC_CLASS_$_Protocol;
-        Class cls = (Class)&OBJC_CLASS_$_Protocol;//这取cls的原理是什么?
+        extern objc_class OBJC_CLASS_$_Protocol;//OBJC_CLASS_$_Protocol 这是名称吗?
+        Class cls = (Class)&OBJC_CLASS_$_Protocol;
         assert(cls);
         NXMapTable *protocol_map = protocols();//获取协议的MapTable
         bool isPreoptimized = hi->isPreoptimized();
@@ -2696,7 +2697,8 @@ void _read_images(header_info **hList, uint32_t hCount, int totalClasses, int un
     // Fix up @protocol references
     // Preoptimized images may have the right 
     // answer already but we don't know for sure.
-    // 为什么需要fix up?
+    // 从section中取出的protolist，按对应的name重新从已分配的缓存中取
+    // 为什么需要重新remap呢?可能对应的协议name已经在缓存中且已分配内存
     for (EACH_HEADER) {
         protocol_t **protolist = _getObjc2ProtocolRefs(hi, &count);//section中读取protocol的ref信息
         for (i = 0; i < count; i++) {
@@ -2713,7 +2715,7 @@ void _read_images(header_info **hList, uint32_t hCount, int totalClasses, int un
         classref_t *classlist = 
             _getObjc2NonlazyClassList(hi, &count);
         for (i = 0; i < count; i++) {
-            Class cls = remapClass(classlist[i]);
+            Class cls = remapClass(classlist[i]);//map中已分配使用map中的cls,否则还是使用classlist[i]
             if (!cls) continue;
 
             // hack for class __ARCLite__, which didn't get this above
@@ -2732,8 +2734,8 @@ void _read_images(header_info **hList, uint32_t hCount, int totalClasses, int un
             }
 #endif
             
-            addClassTableEntry(cls);
-            realizeClass(cls);//实现cls
+            addClassTableEntry(cls);//实例和类对象存入allocatedClasses
+            realizeClass(cls);//实现cls:设置ro、rw,各种标志位,父类、元类,类别等
         }
     }
 
@@ -2759,7 +2761,7 @@ void _read_images(header_info **hList, uint32_t hCount, int totalClasses, int un
 
         for (i = 0; i < count; i++) {
             category_t *cat = catlist[i];
-            Class cls = remapClass(cat->cls);
+            Class cls = remapClass(cat->cls);//在realizeClass中已经有添加分类，这时候直接map查找
 
             if (!cls) {
                 // Category's target class is missing (probably weak-linked).
@@ -6987,6 +6989,7 @@ OBJC_EXTERN void objc_msgSend_fp2ret_fixedup(void);
 * fixupMessageRef
 * Repairs an old vtable dispatch call site. 
 * vtable dispatch itself is not supported.
+ 给msg->imp赋值
 **********************************************************************/
 static void 
 fixupMessageRef(message_ref_t *msg)

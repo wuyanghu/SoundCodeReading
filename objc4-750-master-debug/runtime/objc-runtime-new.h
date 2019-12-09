@@ -392,9 +392,9 @@ struct locstamped_category_list_t {
 // These are emitted by the compiler and are part of the ABI.
 // Note: See CGObjCNonFragileABIMac::BuildClassRoTInitializer in clang
 // class is a metaclass
-#define RO_META               (1<<0)
+#define RO_META               (1<<0)//元类标识
 // class is a root class
-#define RO_ROOT               (1<<1)
+#define RO_ROOT               (1<<1)//根类标识
 // class has .cxx_construct/destruct implementations
 #define RO_HAS_CXX_STRUCTORS  (1<<2)
 // class has +load implementation
@@ -423,6 +423,7 @@ struct locstamped_category_list_t {
 // These are not emitted by the compiler and are never used in class_ro_t. 
 // Their presence should be considered in future ABI versions.
 // class_t->data is class_rw_t, not class_ro_t
+// 是否实现标识
 #define RW_REALIZED           (1<<31)
 // class is unresolved future class
 #define RW_FUTURE             (1<<30)
@@ -1274,6 +1275,7 @@ struct objc_class : objc_object {
 
     // Locking: To prevent concurrent realization, hold runtimeLock.
     //  为了防止并发实现，持有runtimeLock
+    // 是否实现
     bool isRealized() {
         return data()->flags & RW_REALIZED;
     }
@@ -1283,7 +1285,7 @@ struct objc_class : objc_object {
     bool isFuture() { 
         return data()->flags & RW_FUTURE;
     }
-
+    //是否是元类
     bool isMetaClass() {
         assert(this);
         assert(isRealized());
@@ -1390,8 +1392,7 @@ struct swift_class_t : objc_class {
 struct category_t {
     // 所属的类名，而不是Category的名字
     const char *name;
-    // 所属的类，这个类型是编译期的类，这时候类还没有被重映射
-    classref_t cls;
+    classref_t cls;//存储对应的cls信息，可以用来查找到map总的cls
     // 实例方法列表
     struct method_list_t *instanceMethods;
     // 类方法列表
