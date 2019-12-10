@@ -30,12 +30,12 @@
 #include "objc-private.h"
 
 typedef void(*load_method_t)(id, SEL);
-
+//cls中+load结构
 struct loadable_class {
     Class cls;  // may be nil
     IMP method;
 };
-
+//cls分类中+load结构
 struct loadable_category {
     Category cat;  // may be nil
     IMP method;
@@ -44,11 +44,14 @@ struct loadable_category {
 
 // List of classes that need +load called (pending superclass +load)
 // This list always has superclasses first because of the way it is constructed
+////需要+load调用的类列表(挂起的超类+load);这个列表总是先有超类，因为它是这样构造的
+//存储+load方法结构:一个数组
 static struct loadable_class *loadable_classes = nil;
-static int loadable_classes_used = 0;
-static int loadable_classes_allocated = 0;
+static int loadable_classes_used = 0;//记录已经完成的+load数量
+static int loadable_classes_allocated = 0;//记录已分配的内存
 
 // List of categories that need +load called (pending parent class +load)
+// 与类的+load类似,多了一个类别存储的结构
 static struct loadable_category *loadable_categories = nil;
 static int loadable_categories_used = 0;
 static int loadable_categories_allocated = 0;
@@ -58,6 +61,7 @@ static int loadable_categories_allocated = 0;
 * add_class_to_loadable_list
 * Class cls has just become connected. Schedule it for +load if
 * it implements a +load method.
+ 查找load对应的imp，与对应的cls组成结构，存储在loadable_classes中
 **********************************************************************/
 void add_class_to_loadable_list(Class cls)
 {
@@ -65,7 +69,7 @@ void add_class_to_loadable_list(Class cls)
 
     loadMethodLock.assertLocked();
 
-    method = cls->getLoadMethod();
+    method = cls->getLoadMethod();//如果有+load方法,返回对应的imp
     if (!method) return;  // Don't bother if cls has no +load method
     
     if (PrintLoading) {
@@ -186,6 +190,7 @@ static void call_class_loads(void)
     int i;
     
     // Detach current loadable list.
+    //loadable_classes:prepare_load_methods存储的数据结构
     struct loadable_class *classes = loadable_classes;
     int used = loadable_classes_used;
     loadable_classes = nil;
@@ -194,13 +199,14 @@ static void call_class_loads(void)
     
     // Call all +loads for the detached list.
     for (i = 0; i < used; i++) {
-        Class cls = classes[i].cls;
-        load_method_t load_method = (load_method_t)classes[i].method;
+        Class cls = classes[i].cls;//对应的cls
+        load_method_t load_method = (load_method_t)classes[i].method;//方法对应的IMP
         if (!cls) continue; 
 
         if (PrintLoading) {
             _objc_inform("LOAD: +[%s load]\n", cls->nameForLogging());
         }
+        //调用cls对应的load:load_method是IMP,cls和SEL_load是方法参数
         (*load_method)(cls, SEL_load);
     }
     
@@ -249,11 +255,12 @@ static bool call_category_loads(void)
                              _category_getName(cat));
             }
             (*load_method)(cls, SEL_load);
-            cats[i].cat = nil;
+            cats[i].cat = nil;//分类去了,只有IMP
         }
     }
 
     // Compact detached list (order-preserving)
+    // 处理多个分类?
     shift = 0;
     for (i = 0; i < used; i++) {
         if (cats[i].cat) {
@@ -350,11 +357,11 @@ void call_load_methods(void)
     do {
         // 1. Repeatedly call class +loads until there aren't any more
         while (loadable_classes_used > 0) {
-            call_class_loads();
+            call_class_loads();//根据prepare_load_methods存储的类名和IMP，调用
         }
 
         // 2. Call category +loads ONCE
-        more_categories = call_category_loads();
+        more_categories = call_category_loads();//分类的loads调用
 
         // 3. Run more +loads if there are classes OR more untried categories
     } while (loadable_classes_used > 0  ||  more_categories);

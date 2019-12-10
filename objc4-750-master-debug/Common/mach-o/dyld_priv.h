@@ -63,9 +63,9 @@ enum dyld_image_states
 typedef const char* (*dyld_image_state_change_handler)(enum dyld_image_states state, uint32_t infoCount, const struct dyld_image_info info[]);
 
 
-
-typedef void (*_dyld_objc_notify_mapped)(unsigned count, const char* const paths[], const struct mach_header* const mh[]);//OC image被加载映射到内存（+load()方法在此时被调用）
-typedef void (*_dyld_objc_notify_init)(const char* path, const struct mach_header* mh);//OC image被init时
+    //OC image被加载映射到内存:这个时候类和分类的已加载完成,+load没有加载
+typedef void (*_dyld_objc_notify_mapped)(unsigned count, const char* const paths[], const struct mach_header* const mh[]);
+typedef void (*_dyld_objc_notify_init)(const char* path, const struct mach_header* mh);//+load()方法在此时被调用
 typedef void (*_dyld_objc_notify_unmapped)(const char* path, const struct mach_header* mh);//OC image被移除内存时
 
 

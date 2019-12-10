@@ -2210,14 +2210,14 @@ void
 load_images(const char *path __unused, const struct mach_header *mh)
 {
     // Return without taking locks if there are no +load methods here.
-    if (!hasLoadMethods((const headerType *)mh)) return;
+    if (!hasLoadMethods((const headerType *)mh)) return;//这个时候所有类和分类应该已加载完成,如果没有直接return
 
     recursive_mutex_locker_t lock(loadMethodLock);
 
     // Discover load methods
     {
         mutex_locker_t lock2(runtimeLock);
-        prepare_load_methods((const headerType *)mh);
+        prepare_load_methods((const headerType *)mh);//处理类与分类中的+load并存储到数据结构中
     }
 
     // Call +load methods (without runtimeLock - re-entrant)
@@ -2893,21 +2893,24 @@ void _read_images(header_info **hList, uint32_t hCount, int totalClasses, int un
 **********************************************************************/
 // Recursively schedule +load for cls and any un-+load-ed superclasses.
 // cls must already be connected.
+// add_class_to_loadable_list类cls刚刚连接上。如果它实现了+load方法，则将其调度为+load。
 static void schedule_class_load(Class cls)
 {
     if (!cls) return;
-    assert(cls->isRealized());  // _read_images should realize
+    assert(cls->isRealized());  // _read_images should realize:此时所有的类已实现
 
     if (cls->data()->flags & RW_LOADED) return;
 
+    //解决了为什么父类的+load会先调用
     // Ensure superclass-first ordering
-    schedule_class_load(cls->superclass);
+    schedule_class_load(cls->superclass);//递归处理父类class的load方法
 
-    add_class_to_loadable_list(cls);
-    cls->setInfo(RW_LOADED); 
+    add_class_to_loadable_list(cls);//load存储到loadable_classes数组中
+    cls->setInfo(RW_LOADED); //设置+load已加载标志位
 }
 
 // Quick scan for +load methods that doesn't take a lock.
+// 是否有未加载的类(如无特别说明:包括类和元类)和分类
 bool hasLoadMethods(const headerType *mhdr)
 {
     size_t count;
@@ -2925,9 +2928,14 @@ void prepare_load_methods(const headerType *mhdr)
     classref_t *classlist = 
         _getObjc2NonlazyClassList(mhdr, &count);
     for (i = 0; i < count; i++) {
+        /*
+         remapClass(classlist[i]）缓存中找到对应的class实例
+         schedule_class_load 查找class对应的+load方法并存储在add_class_to_loadable_list中,递归优先处理父类的+load方法
+         */
         schedule_class_load(remapClass(classlist[i]));
     }
 
+    //整体与上面类似
     category_t **categorylist = _getObjc2NonlazyCategoryList(mhdr, &count);
     for (i = 0; i < count; i++) {
         category_t *cat = categorylist[i];
@@ -4254,6 +4262,7 @@ class_copyPropertyList(Class cls, unsigned int *outCount)
 * fixme
 * Called only from add_class_to_loadable_list.
 * Locking: runtimeLock must be read- or write-locked by the caller.
+ 查找ISA()->data()中的load方法，有返回imp
 **********************************************************************/
 IMP 
 objc_class::getLoadMethod()
@@ -4262,17 +4271,17 @@ objc_class::getLoadMethod()
 
     const method_list_t *mlist;
 
-    assert(isRealized());
-    assert(ISA()->isRealized());
-    assert(!isMetaClass());
-    assert(ISA()->isMetaClass());
+    assert(isRealized());//实例已经实现
+    assert(ISA()->isRealized());//对应的类已经实现
+    assert(!isMetaClass());//不是元类
+    assert(ISA()->isMetaClass());//???
 
-    mlist = ISA()->data()->ro->baseMethods();
+    mlist = ISA()->data()->ro->baseMethods();//读取方法列表
     if (mlist) {
         for (const auto& meth : *mlist) {
-            const char *name = sel_cname(meth.name);
-            if (0 == strcmp(name, "load")) {
-                return meth.imp;
+            const char *name = sel_cname(meth.name);//把SEL转成对应的name
+            if (0 == strcmp(name, "load")) {//如果name是load
+                return meth.imp;//返回imp
             }
         }
     }

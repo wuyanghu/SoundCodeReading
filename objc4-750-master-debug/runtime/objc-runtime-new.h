@@ -439,7 +439,7 @@ struct locstamped_category_list_t {
 #define RW_CONSTRUCTED        (1<<25)
 // available for use; was RW_FINALIZE_ON_MAIN_THREAD
 // #define RW_24 (1<<24)
-// class +load has been called
+// class +load has been called(+load方法是否加载标志位)
 #define RW_LOADED             (1<<23)
 #if !SUPPORT_NONPOINTER_ISA
 // class instances may have associative references

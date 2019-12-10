@@ -1990,6 +1990,7 @@ void arr_init(void)
     return self;
 }
 
+//实例对象调用self.class时调用此方法,通过isa指针找到类的class
 - (Class)class {
     return object_getClass(self);
 }
