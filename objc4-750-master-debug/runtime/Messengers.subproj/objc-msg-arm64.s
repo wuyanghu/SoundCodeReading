@@ -80,9 +80,9 @@ _objc_exitPoints:
 /********************************************************************
  * GetClassFromIsa_p16 src
  * src is a raw isa field. Sets p16 to the corresponding class pointer.
- * The raw isa might be an indexed isa to be decoded, or a
- * packed isa that needs to be masked.
- *
+ * The raw isa might be an indexed isa to be decoded, or a packed isa that needs to be masked.
+ *  src是一个原始isa字段。将p16设置为对应的类指针。
+ *  原始isa可能是要解码的索引isa，或者是需要屏蔽的打包isa。
  * On exit:
  *   $0 is unchanged
  *   p16 is a class pointer
@@ -205,18 +205,22 @@ LExit$0:
 .endif
 .endmacro
 
+
+//======================
 .macro CheckMiss
 	// miss if bucket->sel == 0
 .if $0 == GETIMP
 	cbz	p9, LGetImpMiss
 .elseif $0 == NORMAL
-	cbz	p9, __objc_msgSend_uncached
+	cbz	p9, __objc_msgSend_uncached //当缓存中没有找到方法时,执行这个函数
 .elseif $0 == LOOKUP
 	cbz	p9, __objc_msgLookup_uncached
 .else
 .abort oops
 .endif
 .endmacro
+//======================
+
 
 .macro JumpMiss
 .if $0 == GETIMP
@@ -230,6 +234,8 @@ LExit$0:
 .endif
 .endmacro
 
+
+//======================从缓存中查找方法的实现
 .macro CacheLookup
 	// p1 = SEL, p16 = isa
 	ldp	p10, p11, [x16, #CACHE]	// p10 = buckets, p11 = occupied|mask
@@ -262,7 +268,7 @@ LExit$0:
 	ldp	p17, p9, [x12]		// {imp, sel} = *bucket
 1:	cmp	p9, p1			// if (bucket->sel != _cmd)
 	b.ne	2f			//     scan more
-	CacheHit $0			// call or return imp
+	CacheHit $0			// call or return imp 缓存命中
 	
 2:	// not hit: p12 = not-hit bucket
 	CheckMiss $0			// miss if bucket->sel == 0
@@ -275,7 +281,7 @@ LExit$0:
 	JumpMiss $0
 	
 .endmacro
-
+//======================结束从缓存中查找方法的实现
 
 /********************************************************************
  *
@@ -299,13 +305,15 @@ _objc_debug_taggedpointer_ext_classes:
 	.fill 256, 8, 0
 #endif
 
-/// 入口
+//===========================_objc_msgSend 入口
 	ENTRY _objc_msgSend
 	UNWIND _objc_msgSend, NoFrame
 
 //p0寄存器，消息接收者;p0是objc_msgSend()传入的第一个参数，也就是消息接收者
 	cmp	p0, #0			// nil check and tagged pointer check
 #if SUPPORT_TAGGED_POINTERS
+//  b是跳转，le是小于等于，也就是x0小于等于0时，跳转到LNilOrTagged
+//  x0是objc_msgSend()传入的第一个参数，也就是消息接收者
 	b.le	LNilOrTagged		//  (MSB tagged pointer looks negative)
 #else
 	b.eq	LReturnZero
@@ -348,7 +356,7 @@ LReturnZero:
 	ret
 
 	END_ENTRY _objc_msgSend
-
+//===========================_objc_msgSend 结束入口
 
 	ENTRY _objc_msgLookup
 	UNWIND _objc_msgLookup, NoFrame
@@ -436,7 +444,7 @@ LLookup_Nil:
 
 	END_ENTRY _objc_msgLookupSuper2
 
-
+//=============从方法列表中去查找方法
 .macro MethodTableLookup
 	
 	// push frame
@@ -458,7 +466,7 @@ LLookup_Nil:
 
 	// receiver and selector already in x0 and x1
 	mov	x2, x16
-	bl	__class_lookupMethodAndLoadCache3
+	bl	__class_lookupMethodAndLoadCache3//调用C的方法
 
 	// IMP in x0
 	mov	x17, x0
@@ -480,6 +488,7 @@ LLookup_Nil:
 
 .endmacro
 
+//===============__objc_msgSend_uncached
 	STATIC_ENTRY __objc_msgSend_uncached
 	UNWIND __objc_msgSend_uncached, FrameWithNoSaves
 
@@ -491,6 +500,7 @@ LLookup_Nil:
 
 	END_ENTRY __objc_msgSend_uncached
 
+//===============
 
 	STATIC_ENTRY __objc_msgLookup_uncached
 	UNWIND __objc_msgLookup_uncached, FrameWithNoSaves

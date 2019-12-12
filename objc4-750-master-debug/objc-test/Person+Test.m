@@ -10,7 +10,7 @@
 @implementation Person (Test)
 - (void)test
 {
-    NSLog(@"%@",NSStringFromSelector(_cmd));
+//    NSLog(@"%@",NSStringFromSelector(_cmd));
 }
 
 + (void)abc

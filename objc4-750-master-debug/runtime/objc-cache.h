@@ -6,7 +6,7 @@
 
 __BEGIN_DECLS
 
-extern IMP cache_getImp(Class cls, SEL sel);
+extern IMP cache_getImp(Class cls, SEL sel);//汇编实现:单点可跟踪
 
 extern void cache_fill(Class cls, SEL sel, IMP imp, id receiver);
 

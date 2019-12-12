@@ -57,9 +57,9 @@ public:
 
 
 struct cache_t {
-    struct bucket_t *_buckets;
+    struct bucket_t *_buckets;//真正的方法缓存
     mask_t _mask;
-    mask_t _occupied;
+    mask_t _occupied;//count
 
 public:
     struct bucket_t *buckets();
@@ -76,9 +76,9 @@ public:
     static size_t bytesForCapacity(uint32_t cap);
     static struct bucket_t * endMarker(struct bucket_t *b, uint32_t cap);
 
-    void expand();
-    void reallocate(mask_t oldCapacity, mask_t newCapacity);
-    struct bucket_t * find(cache_key_t key, id receiver);
+    void expand();//动态扩展
+    void reallocate(mask_t oldCapacity, mask_t newCapacity);//重新分配内存
+    struct bucket_t * find(cache_key_t key, id receiver);//查找
 
     static void bad_cache(id receiver, SEL sel, Class isa) __attribute__((noreturn));
 };
@@ -1120,7 +1120,7 @@ public:
 struct objc_class : objc_object {
     // Class ISA;
     Class superclass;
-    cache_t cache;             // formerly cache pointer and vtable
+    cache_t cache;             // formerly cache pointer and vtable 方法缓存:每个cls对应一个
     class_data_bits_t bits;    // class_rw_t * plus custom rr/alloc flags
 
     class_rw_t *data() { 

@@ -1421,9 +1421,9 @@ static void remapClassRef(Class *clsref)
 
 /***********************************************************************
 * getNonMetaClass
-* Return the ordinary class for this class or metaclass. 
-* `inst` is an instance of `cls` or a subclass thereof, or nil. 
-* Non-nil inst is faster.
+* Return the ordinary class for this class or metaclass. (返回这个类或元类的普通类。)
+* `inst` is an instance of `cls` or a subclass thereof, or nil. (' inst '是' cls '的一个实例或其子类，或nil。)
+* Non-nil inst is faster.(非nil inst更快。)
 * Used by +initialize. 
 * Locking: runtimeLock must be read- or write-locked by the caller
 **********************************************************************/
@@ -4882,7 +4882,7 @@ static void
 log_and_fill_cache(Class cls, IMP imp, SEL sel, id receiver, Class implementer)
 {
 #if SUPPORT_MESSAGE_LOGGING
-    if (objcMsgLogEnabled) {
+    if (objcMsgLogEnabled) {//log日志
         bool cacheIt = logMessageSend(implementer->isMetaClass(), 
                                       cls->nameForLogging(),
                                       implementer->nameForLogging(), 
@@ -4897,8 +4897,7 @@ log_and_fill_cache(Class cls, IMP imp, SEL sel, id receiver, Class implementer)
 /***********************************************************************
 * _class_lookupMethodAndLoadCache.
 * Method lookup for dispatchers ONLY. OTHER CODE SHOULD USE lookUpImp().
-* This lookup avoids optimistic cache scan because the dispatcher 
-* already tried that.
+* This lookup avoids optimistic cache scan because the dispatcher already tried that.
 **********************************************************************/
 IMP _class_lookupMethodAndLoadCache3(id obj, SEL sel, Class cls)
 {
@@ -4909,8 +4908,8 @@ IMP _class_lookupMethodAndLoadCache3(id obj, SEL sel, Class cls)
 
 /***********************************************************************
 * lookUpImpOrForward.
-* The standard IMP lookup. 
-* initialize==NO tries to avoid +initialize (but sometimes fails)
+* The standard IMP lookup. 标准IMP查找
+* initialize==NO tries to avoid +initialize (but sometimes fails).
 * cache==NO skips optimistic unlocked lookup (but uses cache elsewhere)
 * Most callers should use initialize==YES and cache==YES.
 * inst is an instance of cls or a subclass thereof, or nil if none is known. 
@@ -4965,20 +4964,21 @@ IMP lookUpImpOrForward(Class cls, SEL sel, id inst,
 
     // Try this class's cache.
 
-    imp = cache_getImp(cls, sel);
+    imp = cache_getImp(cls, sel);//尝试从cls查找sel,这个方法用汇编实现的
     if (imp) goto done;
 
     // Try this class's method lists.
     {
-        Method meth = getMethodNoSuper_nolock(cls, sel);
+        Method meth = getMethodNoSuper_nolock(cls, sel);//查找
         if (meth) {
-            log_and_fill_cache(cls, meth->imp, sel, inst, cls);
+            log_and_fill_cache(cls, meth->imp, sel, inst, cls);//方法缓存:找到存到缓存并返回
             imp = meth->imp;
             goto done;
         }
     }
 
     // Try superclass caches and method lists.
+    // 父类查找
     {
         unsigned attempts = unreasonableClassCount();
         for (Class curClass = cls->superclass;
@@ -5017,7 +5017,7 @@ IMP lookUpImpOrForward(Class cls, SEL sel, id inst,
     }
 
     // No implementation found. Try method resolver once.
-
+    //方法没有实现,尝试resolver
     if (resolver  &&  !triedResolver) {
         runtimeLock.unlock();
         _class_resolveMethod(cls, sel, inst);
@@ -5030,7 +5030,7 @@ IMP lookUpImpOrForward(Class cls, SEL sel, id inst,
 
     // No implementation found, and method resolver didn't help. 
     // Use forwarding.
-
+    //即没有实现,resolver也不能解决时
     imp = (IMP)_objc_msgForward_impcache;
     cache_fill(cls, sel, imp, inst);
 

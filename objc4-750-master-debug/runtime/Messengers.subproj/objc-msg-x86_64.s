@@ -1070,8 +1070,8 @@ LCacheMiss:
 	// Out-of-band r10 is the searched class
 
 	// r10 is already the class to search
-	MethodTableLookup NORMAL	// r11 = IMP
-	jmp	*%r11			// goto *imp
+	MethodTableLookup NORMAL	// r11 = IMP(调用_class_lookupMethodAndLoadCache3,并返回对应的IMP)
+	jmp	*%r11			// goto *imp(跳转到%r11,开始调用方法了,%r11可用register read r11查看)
 
 	END_ENTRY __objc_msgSend_uncached
 

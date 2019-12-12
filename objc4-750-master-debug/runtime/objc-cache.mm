@@ -569,7 +569,7 @@ static void cache_fill_nolock(Class cls, SEL sel, IMP imp, id receiver)
     // before we grabbed the cacheUpdateLock.
     if (cache_getImp(cls, sel)) return;
 
-    cache_t *cache = getCache(cls);
+    cache_t *cache = getCache(cls);//取出cls的cache:每一个cls都有一个cache_t
     cache_key_t key = getKey(sel);
 
     // Use the cache as-is if it is less than 3/4 full
@@ -577,14 +577,14 @@ static void cache_fill_nolock(Class cls, SEL sel, IMP imp, id receiver)
     mask_t capacity = cache->capacity();
     if (cache->isConstantEmptyCache()) {
         // Cache is read-only. Replace it.
-        cache->reallocate(capacity, capacity ?: INIT_CACHE_SIZE);
+        cache->reallocate(capacity, capacity ?: INIT_CACHE_SIZE);//没有分配,分配内存
     }
     else if (newOccupied <= capacity / 4 * 3) {
         // Cache is less than 3/4 full. Use it as-is.
     }
     else {
         // Cache is too full. Expand it.
-        cache->expand();
+        cache->expand();//缓存满了,扩展
     }
 
     // Scan for the first unused slot and insert there.
@@ -592,7 +592,7 @@ static void cache_fill_nolock(Class cls, SEL sel, IMP imp, id receiver)
     // minimum size is 4 and we resized at 3/4 full.
     bucket_t *bucket = cache->find(key, receiver);
     if (bucket->key() == 0) cache->incrementOccupied();
-    bucket->set(key, imp);
+    bucket->set(key, imp);//添加imp缓存
 }
 
 void cache_fill(Class cls, SEL sel, IMP imp, id receiver)

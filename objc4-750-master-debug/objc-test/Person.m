@@ -41,6 +41,7 @@
      */
     [self.class walkClass2];
     [self walkClass2];
+    [Person walkClass2];
 }
 
 + (void)walkClass2{

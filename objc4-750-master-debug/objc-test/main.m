@@ -12,6 +12,7 @@
 #import "Person+Test.h"
 #import "Person+Test2.h"
 #import "NSObject+AddParams.h"
+#import "MessageSend.h"
 
 void printMethodNamesOfClass(Class cls);//打印类的所有分类
 void associated(Person * obj);//关联对象
@@ -24,19 +25,23 @@ int main(int argc, const char * argv[]) {
 //        id newObject = [[newClass alloc]init];
 //        NSLog(@"%@",newObject);
         
-        Person * person = [[Person alloc] init];
-        Person * person2 = [Person alloc];
-        person2 = [person2 init];
-        [person test];
-        [person test];
+//        Person * person = [[Person alloc] init];
+//        Person * person2 = [Person alloc];
+//        person2 = [person2 init];
+//        [person test];
+//        [person test];
+//        
+//        printMethodNamesOfClass([Person class]);
+//        associated(person);
+//        
+//        weak(person);
+//        
+//        [[Person new] walkInstance];//消息转发
+//        [Person walkClass];
         
-        printMethodNamesOfClass([Person class]);
-        associated(person);
-        
-        weak(person);
-        
-        [[Person new] walkInstance];//消息转发
-        [Person walkClass];
+        MessageSend * send = [MessageSend new];
+        [send message];
+        [send message];
     }
     return 0;
 }
