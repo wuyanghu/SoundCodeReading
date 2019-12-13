@@ -309,7 +309,7 @@ _objc_debug_taggedpointer_ext_classes:
 	ENTRY _objc_msgSend
 	UNWIND _objc_msgSend, NoFrame
 
-//p0寄存器，消息接收者;p0是objc_msgSend()传入的第一个参数，也就是消息接收者
+//p0寄存器，消息接收者;p0是objc_msgSend(id self, SEL _cmd)传入的第一个参数，也就是消息接收者
 	cmp	p0, #0			// nil check and tagged pointer check
 #if SUPPORT_TAGGED_POINTERS
 //  b是跳转，le是小于等于，也就是x0小于等于0时，跳转到LNilOrTagged

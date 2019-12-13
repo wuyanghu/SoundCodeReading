@@ -137,7 +137,7 @@ typedef NS_ENUM(NSUInteger, AFHTTPRequestQueryStringSerializationStyle) {
 
 /**
  The timeout interval, in seconds, for created requests. The default timeout interval is 60 seconds.
-
+ 超时时间
  @see NSMutableURLRequest -setTimeoutInterval:
  */
 @property (nonatomic, assign) NSTimeInterval timeoutInterval;

@@ -4925,7 +4925,27 @@ IMP lookUpImpOrForward(Class cls, SEL sel, id inst,
     bool triedResolver = NO;
 
     runtimeLock.assertUnlocked();
-
+/*
+ 1.在当前类查找
+ cache为NO
+ cls->isRealized:判断cls是否实现,没有实现就实现
+ cls->isInitialized:判断cls是否初始化，没有初始化就初始化
+ cache_getImp:汇编查找:找到直接返回
+ getMethodNoSuper_nolock:从cls的data中查找
+ log_and_fill_cache:找到填充到bucket中
+ 2.父类中查找
+ 如果以上没找到:沿着superClass在父类查找
+ 3.尝试解决
+ 如还是没有找到:尝试用_class_resolveMethod查找
+ 如果还没有实现:_objc_msgForward_impcache解决
+ 
+ 问题:如果父类中实现了方法,而子类也实现了_class_resolveMethod,最后会走哪个?
+ _class_resolveMethod在父类查找后面实现，肯定是走父类方法不会走_class_resolveMethod
+ 问题2:父类中的实例方法self指的是子类的实例对象还是父类实例对象?
+ 如果是子类有实现，self指的是子类的实例对象，而所有方法查找都是从子类先开始查找
+ 问题3:父类的按钮有一个点击事件clickAction,而子类也实现了clickAction，最后调用的是哪个?
+ 调用子类的clickAction,这也是模板模式的经典实用。把钩子留个子类
+ */
     // Optimistic cache lookup
     if (cache) {
         imp = cache_getImp(cls, sel);
@@ -4944,13 +4964,13 @@ IMP lookUpImpOrForward(Class cls, SEL sel, id inst,
     runtimeLock.lock();
     checkIsKnownClass(cls);
 
-    if (!cls->isRealized()) {
-        realizeClass(cls);
+    if (!cls->isRealized()) {//如果sel中的cls没有实现
+        realizeClass(cls);//实现cls
     }
 
     if (initialize  &&  !cls->isInitialized()) {
         runtimeLock.unlock();
-        _class_initialize (_class_getNonMetaClass(cls, inst));
+        _class_initialize (_class_getNonMetaClass(cls, inst));//初始化cls
         runtimeLock.lock();
         // If sel == initialize, _class_initialize will send +initialize and 
         // then the messenger will send +initialize again after this 
@@ -4964,12 +4984,12 @@ IMP lookUpImpOrForward(Class cls, SEL sel, id inst,
 
     // Try this class's cache.
 
-    imp = cache_getImp(cls, sel);//尝试从cls查找sel,这个方法用汇编实现的
+    imp = cache_getImp(cls, sel);//汇编缓存查找:从cls缓存查找sel
     if (imp) goto done;
 
     // Try this class's method lists.
     {
-        Method meth = getMethodNoSuper_nolock(cls, sel);//查找
+        Method meth = getMethodNoSuper_nolock(cls, sel);//C语言查找:从methods中
         if (meth) {
             log_and_fill_cache(cls, meth->imp, sel, inst, cls);//方法缓存:找到存到缓存并返回
             imp = meth->imp;

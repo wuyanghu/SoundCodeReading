@@ -9,7 +9,11 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface MessageSend : NSObject
+@interface BaseMessageSend : NSObject
+- (void)baseMessage;
+@end
+
+@interface MessageSend : BaseMessageSend
 - (void)message;
 @end
 

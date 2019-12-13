@@ -42,6 +42,9 @@ int main(int argc, const char * argv[]) {
         MessageSend * send = [MessageSend new];
         [send message];
         [send message];
+        [send baseMessage];
+        
+        [send performSelector:@selector(baseMessage) withObject:nil afterDelay:0];
     }
     return 0;
 }

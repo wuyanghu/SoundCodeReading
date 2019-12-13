@@ -7,6 +7,14 @@
 
 #import "MessageSend.h"
 
+@implementation BaseMessageSend
+
+- (void)baseMessage{
+    NSLog(@"基类消息发送");
+}
+
+@end
+
 @implementation MessageSend
 
 - (void)message{

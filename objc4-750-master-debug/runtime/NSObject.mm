@@ -1972,11 +1972,15 @@ void arr_init(void)
 
 @implementation NSObject
 
+#pragma mark - 初始化
+
 + (void)load {
 }
 
 + (void)initialize {
 }
+
+#pragma mark  - self
 
 + (id)self {
     return (id)self;
@@ -1985,6 +1989,8 @@ void arr_init(void)
 - (id)self {
     return self;
 }
+
+#pragma mark - self.class
 
 + (Class)class {
     return self;
@@ -1995,6 +2001,8 @@ void arr_init(void)
     return object_getClass(self);
 }
 
+#pragma mark - self.superclass
+
 + (Class)superclass {
     return self->superclass;
 }
@@ -2003,10 +2011,12 @@ void arr_init(void)
     return [self class]->superclass;
 }
 
+#pragma mark - isMemberOfClass、isKindOfClass
+
 + (BOOL)isMemberOfClass:(Class)cls {
     return object_getClass((id)self) == cls;
 }
-
+//仅当前类查找
 - (BOOL)isMemberOfClass:(Class)cls {
     return [self class] == cls;
 }
@@ -2017,7 +2027,7 @@ void arr_init(void)
     }
     return NO;
 }
-
+//沿着superclass查找，直到找到
 - (BOOL)isKindOfClass:(Class)cls {
     for (Class tcls = [self class]; tcls; tcls = tcls->superclass) {
         if (tcls == cls) return YES;
@@ -2031,6 +2041,8 @@ void arr_init(void)
     }
     return NO;
 }
+
+#pragma mark - 方法是否响应
 
 + (BOOL)isAncestorOfObject:(NSObject *)obj {
     for (Class tcls = [obj class]; tcls; tcls = tcls->superclass) {
@@ -2070,6 +2082,8 @@ void arr_init(void)
     return NO;
 }
 
+#pragma mark - hash、isEqual
+
 + (NSUInteger)hash {
     return _objc_rootHash(self);
 }
@@ -2086,6 +2100,7 @@ void arr_init(void)
     return obj == self;
 }
 
+#pragma mark -
 
 + (BOOL)isFault {
     return NO;
@@ -2103,7 +2118,7 @@ void arr_init(void)
     return NO;
 }
 
-
+#pragma mark - 方法重定向实现
 + (IMP)instanceMethodForSelector:(SEL)sel {
     if (!sel) [self doesNotRecognizeSelector:sel];
     return class_getMethodImplementation(self, sel);
@@ -2139,6 +2154,7 @@ void arr_init(void)
                 object_getClassName(self), sel_getName(sel), self);
 }
 
+#pragma mark - 方法调用:performSelector
 
 + (id)performSelector:(SEL)sel {
     if (!sel) [self doesNotRecognizeSelector:sel];
@@ -2170,6 +2186,8 @@ void arr_init(void)
     return ((id(*)(id, SEL, id, id))objc_msgSend)(self, sel, obj1, obj2);
 }
 
+
+#pragma mark - forwardInvocation
 
 // Replaced by CF (returns an NSMethodSignature)
 + (NSMethodSignature *)instanceMethodSignatureForSelector:(SEL)sel {
@@ -2224,6 +2242,7 @@ void arr_init(void)
     return [self description];
 }
 
+#pragma mark - new、retain、release、delloc
 
 + (id)new {
     return [callAlloc(self, false/*checkNil*/) init];
