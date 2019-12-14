@@ -209,7 +209,7 @@ typedef locstamped_category_list_t category_list;
     Runtime fixed-up protocols get 3<<30.
 */
 
-static uint32_t fixed_up_method_list = 3;
+static uint32_t fixed_up_method_list = 3;//标识方法是否已经排序:消息发送时按二分查找,没有排序:一般数组遍历
 static uint32_t fixed_up_protocol = PROTOCOL_FIXED_UP_1;
 
 void
@@ -218,6 +218,8 @@ disableSharedCacheOptimizations(void)
     fixed_up_method_list = 2;
     fixed_up_protocol = PROTOCOL_FIXED_UP_1 | PROTOCOL_FIXED_UP_2;
 }
+
+#pragma mark - fixedUp method_list
 
 bool method_list_t::isFixedUp() const {
     return flags() == fixed_up_method_list;
@@ -711,7 +713,7 @@ fixupMethodList(method_list_t *mlist, bool bundleCopy, bool sort)
     }
     
     // Mark method list as uniqued and sorted
-    mlist->setFixedUp();
+    mlist->setFixedUp();//设置标识
 }
 
 
@@ -745,7 +747,7 @@ prepareMethodLists(Class cls, method_list_t **addedLists, int addedCount,
 
         // Fixup selectors if necessary
         if (!mlist->isFixedUp()) {
-            fixupMethodList(mlist, methodsFromBundle, true/*sort*/);
+            fixupMethodList(mlist, methodsFromBundle, true/*sort*/);//通过name排序
         }
 
         // Scan for method implementations tracked by the class's flags
@@ -861,7 +863,7 @@ static void methodizeClass(Class cls)
     // (安装类本身实现的方法和属性)
     method_list_t *list = ro->baseMethods();
     if (list) {
-        prepareMethodLists(cls, &list, 1, YES, isBundleClass(cls));
+        prepareMethodLists(cls, &list, 1, YES, isBundleClass(cls));//给方法排序
         rw->methods.attachLists(&list, 1);//方法
     }
 
@@ -4720,7 +4722,7 @@ class_setVersion(Class cls, int version)
     cls->data()->version = version;
 }
 
-
+//二分查找
 static method_t *findMethodInSortedMethodList(SEL key, const method_list_t *list)
 {
     assert(list);
@@ -4732,7 +4734,7 @@ static method_t *findMethodInSortedMethodList(SEL key, const method_list_t *list
     uint32_t count;
     
     for (count = list->count; count != 0; count >>= 1) {
-        probe = base + (count >> 1);
+        probe = base + (count >> 1);//count >> 1 = count/2
         
         uintptr_t probeValue = (uintptr_t)probe->name;
         
@@ -4768,7 +4770,7 @@ static method_t *search_method_list(const method_list_t *mlist, SEL sel)
     if (__builtin_expect(methodListIsFixedUp && methodListHasExpectedSize, 1)) {
         return findMethodInSortedMethodList(sel, mlist);
     } else {
-        // Linear search of unsorted method list
+        // Linear search of unsorted method list(未排序方法列表的线性搜索)
         for (auto& meth : *mlist) {
             if (meth.name == sel) return &meth;
         }

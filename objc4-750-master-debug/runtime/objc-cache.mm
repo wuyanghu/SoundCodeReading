@@ -557,7 +557,7 @@ void cache_t::expand()
     reallocate(oldCapacity, newCapacity);
 }
 
-
+//添加方法缓存
 static void cache_fill_nolock(Class cls, SEL sel, IMP imp, id receiver)
 {
     cacheUpdateLock.assertLocked();

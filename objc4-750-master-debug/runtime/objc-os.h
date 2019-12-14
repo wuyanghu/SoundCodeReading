@@ -1008,7 +1008,7 @@ memdup(const void *mem, size_t len)
     return dup;
 }
 
-// strdup that doesn't copy read-only memory
+// strdup that doesn't copy read-only memory:拷贝字符串
 static inline char *
 strdupIfMutable(const char *str)
 {

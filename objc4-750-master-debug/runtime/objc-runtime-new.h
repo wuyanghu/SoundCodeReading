@@ -218,12 +218,13 @@ struct entsize_list_tt {
     };
 };
 
-
+//方法数据结构
 struct method_t {
-    SEL name;
-    const char *types;
+    SEL name;//名称
+    const char *types;//类型:v16@0:8
     MethodListIMP imp;
 
+    //通过名称排序
     struct SortBySELAddress :
         public std::binary_function<const method_t&,
                                     const method_t&, bool>
@@ -578,10 +579,10 @@ struct class_ro_t {
 
 /***********************************************************************
 * list_array_tt<Element, List>
-* Generic implementation for metadata that can be augmented by categories.
+* Generic implementation for metadata that can be augmented by categories.(可通过类别扩充的元数据的通用实现)
 *
-* Element is the underlying metadata type (e.g. method_t)
-* List is the metadata's list type (e.g. method_list_t)
+ * Element is the underlying metadata type (e.g. method_t):元素是底层元数据类型(例如method_t)
+ * List is the metadata's list type (e.g. method_list_t):List是元数据的列表类型(例如，method_list_t)
 *
 * A list_array_tt has one of three values:
 * - empty
@@ -590,6 +591,7 @@ struct class_ro_t {
 *
 * countLists/beginLists/endLists iterate the metadata lists
 * count/begin/end iterate the underlying metadata elements
+ 线性表结构:在存储方法，协议使用
 **********************************************************************/
 template <typename Element, typename List>
 class list_array_tt {
@@ -690,7 +692,7 @@ class list_array_tt {
         return iterator(e, e);
     }
 
-
+    //返回count
     uint32_t countLists() {
         if (hasArray()) {
             return array()->count;
@@ -703,7 +705,7 @@ class list_array_tt {
 
     List** beginLists() {
         if (hasArray()) {
-            return array()->lists;
+            return array()->lists;//数组首地址
         } else {
             return &list;
         }
@@ -711,7 +713,7 @@ class list_array_tt {
 
     List** endLists() {
         if (hasArray()) {
-            return array()->lists + array()->count;
+            return array()->lists + array()->count;//count
         } else if (list) {
             return &list + 1;
         } else {
@@ -723,6 +725,7 @@ class list_array_tt {
      addedCount:数组长度
      结果:导致新的数组元素在旧元素前面
      */
+    
     void attachLists(List* const * addedLists, uint32_t addedCount) {
         if (addedCount == 0) return;
 

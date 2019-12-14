@@ -627,7 +627,7 @@ LNilTestSlow:
 
 // do lookup
 	movq	%a1, %r10		// move class to r10 for CacheLookup
-	CacheLookup NORMAL, GETIMP	// returns IMP on success
+	CacheLookup NORMAL, GETIMP	// returns IMP on success(cache_getImp(cls, sel)跟踪到这里)
 
 LCacheMiss:
 // cache miss, return nil
