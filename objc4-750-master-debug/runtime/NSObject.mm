@@ -81,6 +81,8 @@ namespace {
 #define SIDE_TABLE_RC_SHIFT 2
 #define SIDE_TABLE_FLAG_MASK (SIDE_TABLE_RC_ONE-1)
 
+#pragma mark - SideTable
+    
 // RefcountMap disguises its pointers because we 
 // don't want the table to act as a root for `leaks`.
 typedef objc::DenseMap<DisguisedPtr<objc_object>,size_t,true> RefcountMap;
@@ -91,8 +93,8 @@ enum HaveNew { DontHaveNew = false, DoHaveNew = true };
 
 struct SideTable {
     spinlock_t slock;
-    RefcountMap refcnts;
-    weak_table_t weak_table;
+    RefcountMap refcnts;//引用计数表
+    weak_table_t weak_table;//弱引用表
 
     SideTable() {
         memset(&weak_table, 0, sizeof(weak_table));
@@ -251,7 +253,7 @@ objc_storeStrong(id *location, id obj)
     objc_release(prev);
 }
 
-
+#pragma mark - weak
 // Update a weak variable.
 // If HaveOld is true, the variable has an existing value 
 //   that needs to be cleaned up. This value might be nil.
@@ -393,7 +395,7 @@ objc_storeWeakOrNil(id *location, id newObj)
 
 
 /** 
- * Initialize a fresh weak pointer to some object location. 
+ * Initialize a fresh weak pointer to some object location. 初始化一个新的弱指针到某个对象位置。
  * It would be used for code like: 
  *
  * (The nil case) 
@@ -404,7 +406,7 @@ objc_storeWeakOrNil(id *location, id newObj)
  * 
  * This function IS NOT thread-safe with respect to concurrent 
  * modifications to the weak variable. (Concurrent weak clear is safe.)
- *
+ * 就对弱变量的并发修改而言，这个函数不是线程安全的。(并发弱清除安全。)
  * @param location Address of __weak ptr. 
  * @param newObj Object ptr. 
  */
@@ -577,7 +579,7 @@ objc_moveWeak(id *dst, id *src)
     *src = nil;
 }
 
-
+#pragma mark - AutoreleasePoolPage
 /***********************************************************************
    Autorelease pool implementation
 

@@ -17,6 +17,7 @@
 void printMethodNamesOfClass(Class cls);//打印类的所有分类
 void associated(Person * obj);//关联对象
 void weak(Person *person);//weak
+void messageSend(void);//消息发送
 
 int main(int argc, const char * argv[]) {
     @autoreleasepool {
@@ -25,7 +26,7 @@ int main(int argc, const char * argv[]) {
 //        id newObject = [[newClass alloc]init];
 //        NSLog(@"%@",newObject);
         
-//        Person * person = [[Person alloc] init];
+        Person * person = [[Person alloc] init];
 //        Person * person2 = [Person alloc];
 //        person2 = [person2 init];
 //        [person test];
@@ -34,20 +35,23 @@ int main(int argc, const char * argv[]) {
 //        printMethodNamesOfClass([Person class]);
 //        associated(person);
 //        
-//        weak(person);
-//        
-//        [[Person new] walkInstance];//消息转发
-//        [Person walkClass];
+        weak(person);
         
-        MessageSend * send = [MessageSend new];
-        [send message];
-        [send message];
-        [send baseMessage];
-        
-        [send performSelector:@selector(baseMessage) withObject:nil afterDelay:0];
+        messageSend();
     }
     return 0;
 }
+//消息发送
+void messageSend(){
+    MessageSend * send = [MessageSend new];
+    [send message];
+    [send message];
+    [send baseMessage];
+    
+    [[Person new] walkInstance];//消息转发
+    [Person walkClass];
+}
+
 //weak源码分析
 void weak(Person *person){
     __weak Person *weakPerson = person;
