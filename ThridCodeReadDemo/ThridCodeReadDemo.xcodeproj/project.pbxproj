@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		4B3D7A6F23A32A8F00EB8A27 /* BrowsePhotoArray.m in Sources */ = {isa = PBXBuildFile; fileRef = 4B3D7A6E23A32A8F00EB8A27 /* BrowsePhotoArray.m */; };
 		7608867A239B89E100683955 /* WPRootViewController.json in Resources */ = {isa = PBXBuildFile; fileRef = 76088679239B89E100683955 /* WPRootViewController.json */; };
 		76088686239B8A3A00683955 /* BaseSectionCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 7608867C239B8A3A00683955 /* BaseSectionCell.m */; };
 		76088687239B8A3A00683955 /* WPTableViewPlaceHolderView.m in Sources */ = {isa = PBXBuildFile; fileRef = 7608867D239B8A3A00683955 /* WPTableViewPlaceHolderView.m */; };
@@ -82,7 +81,6 @@
 		76127A6F239B858200D9E030 /* AFAutoPurgingImageCache.m in Sources */ = {isa = PBXBuildFile; fileRef = 76127A62239B858100D9E030 /* AFAutoPurgingImageCache.m */; };
 		76127A70239B858200D9E030 /* UIRefreshControl+AFNetworking.m in Sources */ = {isa = PBXBuildFile; fileRef = 76127A66239B858200D9E030 /* UIRefreshControl+AFNetworking.m */; };
 		76127A71239B858200D9E030 /* UIWebView+AFNetworking.m in Sources */ = {isa = PBXBuildFile; fileRef = 76127A68239B858200D9E030 /* UIWebView+AFNetworking.m */; };
-		76135CD423A47DDD00A71F8B /* DistanceUploadTime.m in Sources */ = {isa = PBXBuildFile; fileRef = 76135CD323A47DDD00A71F8B /* DistanceUploadTime.m */; };
 		76DFBE732377D32D0092DDF9 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 76DFBE722377D32D0092DDF9 /* AppDelegate.m */; };
 		76DFBE762377D32D0092DDF9 /* WPRootViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 76DFBE752377D32D0092DDF9 /* WPRootViewController.m */; };
 		76DFBE792377D32D0092DDF9 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 76DFBE772377D32D0092DDF9 /* Main.storyboard */; };
@@ -125,7 +123,6 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		4B3D7A6E23A32A8F00EB8A27 /* BrowsePhotoArray.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BrowsePhotoArray.m; sourceTree = "<group>"; };
 		76088679239B89E100683955 /* WPRootViewController.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = WPRootViewController.json; sourceTree = "<group>"; };
 		7608867C239B8A3A00683955 /* BaseSectionCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BaseSectionCell.m; sourceTree = "<group>"; };
 		7608867D239B8A3A00683955 /* WPTableViewPlaceHolderView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WPTableViewPlaceHolderView.m; sourceTree = "<group>"; };
@@ -280,7 +277,6 @@
 		76127A66239B858200D9E030 /* UIRefreshControl+AFNetworking.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "UIRefreshControl+AFNetworking.m"; sourceTree = "<group>"; };
 		76127A67239B858200D9E030 /* UIImageView+AFNetworking.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "UIImageView+AFNetworking.h"; sourceTree = "<group>"; };
 		76127A68239B858200D9E030 /* UIWebView+AFNetworking.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "UIWebView+AFNetworking.m"; sourceTree = "<group>"; };
-		76135CD323A47DDD00A71F8B /* DistanceUploadTime.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DistanceUploadTime.m; sourceTree = "<group>"; };
 		76DFBE6E2377D32D0092DDF9 /* ThridCodeReadDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ThridCodeReadDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		76DFBE712377D32D0092DDF9 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		76DFBE722377D32D0092DDF9 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
@@ -680,8 +676,6 @@
 		76DFBE892377D32E0092DDF9 /* ThridCodeReadDemoTests */ = {
 			isa = PBXGroup;
 			children = (
-				76135CD323A47DDD00A71F8B /* DistanceUploadTime.m */,
-				4B3D7A6E23A32A8F00EB8A27 /* BrowsePhotoArray.m */,
 				76DFBE8A2377D32E0092DDF9 /* ThridCodeReadDemoTests.m */,
 				76DFBE8C2377D32E0092DDF9 /* Info.plist */,
 			);
@@ -972,9 +966,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				4B3D7A6F23A32A8F00EB8A27 /* BrowsePhotoArray.m in Sources */,
 				76DFBE8B2377D32E0092DDF9 /* ThridCodeReadDemoTests.m in Sources */,
-				76135CD423A47DDD00A71F8B /* DistanceUploadTime.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
