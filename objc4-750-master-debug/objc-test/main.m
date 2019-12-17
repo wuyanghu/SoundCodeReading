@@ -18,6 +18,7 @@ void printMethodNamesOfClass(Class cls);//打印类的所有分类
 void associated(Person * obj);//关联对象
 void weak(Person *person);//weak
 void messageSend(void);//消息发送
+void strong(Person *person);//strong源码分析
 
 int main(int argc, const char * argv[]) {
     @autoreleasepool {
@@ -27,14 +28,16 @@ int main(int argc, const char * argv[]) {
 //        NSLog(@"%@",newObject);
         
         Person * person = [[Person alloc] init];
+        Person * person2 = [Person new];//[callAlloc(self, false/*checkNil*/) init] 与上面等价
 //        Person * person2 = [Person alloc];
 //        person2 = [person2 init];
 //        [person test];
 //        [person test];
 //        
 //        printMethodNamesOfClass([Person class]);
-//        associated(person);
-//        
+        associated(person);
+
+        strong(person);
         weak(person);
         
         messageSend();
@@ -52,8 +55,18 @@ void messageSend(){
     [Person walkClass];
 }
 
+//strong源码分析
+void strong(Person *person){
+    //指针地址指向指针
+    Person *weakPerson = person;//相当于调了retain方法
+    NSLog(@"person指针:%p\nweakPerson指针:%p",person,weakPerson);
+    NSLog(@"person指针地址:%p\nweakPerson指针地址:%p",&person,&weakPerson);
+}
+
+
 //weak源码分析
 void weak(Person *person){
+    //指针地址指向指针
     __weak Person *weakPerson = person;
     __weak Person *weakPerson2 = person;
     NSLog(@"person指针:%p\nweakPerson指针:%p",person,weakPerson);

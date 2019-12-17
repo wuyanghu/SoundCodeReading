@@ -65,6 +65,33 @@
     NSAssert([timeString isEqualToString:@"1天前"], @"");
 }
 
+//整一月前,边界
+- (void)test1MonthAgo{
+    NSString * timeString = [self distanceUpLoadTimeWith:@"2019-11-14 11:00:00"];
+    NSAssert([timeString isEqualToString:@"1月前"], @"");
+}
+
+- (void)test1MonthAgo2{
+    NSString * timeString = [self distanceUpLoadTimeWith:@"2019-11-13 11:00:00"];
+    NSAssert([timeString isEqualToString:@"1月前"], @"");
+}
+
+- (void)test3MonthAgo{
+    NSString * timeString = [self distanceUpLoadTimeWith:@"2019-09-13 11:00:00"];
+    NSAssert([timeString isEqualToString:@"3月前"], @"");
+}
+
+//整一年前,边界
+- (void)test1YearsAgo{
+    NSString * timeString = [self distanceUpLoadTimeWith:@"2018-11-14 11:00:00"];
+    NSAssert([timeString isEqualToString:@"1年前"], @"");
+}
+
+- (void)test1YearsAgo2{
+    NSString * timeString = [self distanceUpLoadTimeWith:@"2018-11-13 11:00:00"];
+    NSAssert([timeString isEqualToString:@"1年前"], @"");
+}
+
 - (NSString *)distanceUpLoadTimeWith:(NSString *)timeString{
 //    NSDate *nowDate = [NSDate date];
     //模拟一个固定的时间点
@@ -75,18 +102,24 @@
 
     NSAssert(interval>0, @"时间必须是正的");
     
+    NSInteger y = interval/(60*60*24*30*12);
+    NSInteger months = interval/(60*60*24*30);
+    NSInteger d = interval/(60*60*24);
     NSInteger h = interval/(60*60);
-    NSInteger m = interval/60;
+    NSInteger minutes = interval/60;
     NSInteger s = (long long)interval%60;
     
     NSString * distanceString;
-    if (h>=24) {
-        h = h/24;
-        distanceString = [NSString stringWithFormat:@"%ld天前",(long)h];
+    if (y>0) {
+        distanceString = [NSString stringWithFormat:@"%ld年前",(long)y];
+    }else if (months>0) {
+        distanceString = [NSString stringWithFormat:@"%ld月前",(long)months];
+    }else if (d>0) {
+        distanceString = [NSString stringWithFormat:@"%ld天前",(long)d];
     }else if (h>0) {
         distanceString = [NSString stringWithFormat:@"%ld小时前",(long)h];
-    }else if (h == 0 && m != 0) {
-        distanceString = [NSString stringWithFormat:@"%ld分钟前",(long)m];
+    }else if (minutes>0) {
+        distanceString = [NSString stringWithFormat:@"%ld分钟前",(long)minutes];
     }else{
         distanceString = [NSString stringWithFormat:@"%ld秒前",(long)s];
     }

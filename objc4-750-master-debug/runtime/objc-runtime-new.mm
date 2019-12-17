@@ -6599,7 +6599,7 @@ _class_createInstanceFromZone(Class cls, size_t extraBytes, void *zone,
     bool hasCxxDtor = cls->hasCxxDtor();
     bool fast = cls->canAllocNonpointer();
 
-    size_t size = cls->instanceSize(extraBytes);
+    size_t size = cls->instanceSize(extraBytes);//最小16字节
     if (outAllocatedSize) *outAllocatedSize = size;
 
     id obj;

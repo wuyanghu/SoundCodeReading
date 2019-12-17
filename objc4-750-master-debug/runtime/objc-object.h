@@ -203,6 +203,7 @@ objc_object::initInstanceIsa(Class cls, bool hasCxxDtor)
     initIsa(cls, true, hasCxxDtor);
 }
     
+//isa标志位
 inline void
 objc_object::initIsa(Class cls, bool nonpointer, bool hasCxxDtor) 
 { 
@@ -348,7 +349,7 @@ objc_object::setHasAssociatedObjects()
         ClearExclusive(&isa.bits);
         return;
     }
-    newisa.has_assoc = true;
+    newisa.has_assoc = true;//关联对象标志位
     if (!StoreExclusive(&isa.bits, oldisa.bits, newisa.bits)) goto retry;
 }
 
@@ -437,7 +438,8 @@ objc_object::rootDealloc()
 }
 
 
-// Equivalent to calling [this retain], with shortcuts if there is no override
+    // Equivalent to calling [this retain], with shortcuts if there is no override.相当于调用[this retain]，如果没有覆盖，则使用快捷方式
+
 inline id 
 objc_object::retain()
 {
@@ -534,7 +536,7 @@ objc_object::release()
 {
     assert(!isTaggedPointer());
 
-    if (fastpath(!ISA()->hasCustomRR())) {
+    if (fastpath(!ISA()->hasCustomRR())) {//快速释放:如无C++，关联对象，弱引用等。
         rootRelease();
         return;
     }

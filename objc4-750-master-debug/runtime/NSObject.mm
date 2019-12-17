@@ -73,7 +73,7 @@ void _objc_setBadAllocHandler(id(*newHandler)(Class))
 namespace {
 
 // The order of these bits is important.
-#define SIDE_TABLE_WEAKLY_REFERENCED (1UL<<0)
+#define SIDE_TABLE_WEAKLY_REFERENCED (1UL<<0)  //weak
 #define SIDE_TABLE_DEALLOCATING      (1UL<<1)  // MSB-ward of weak bit
 #define SIDE_TABLE_RC_ONE            (1UL<<2)  // MSB-ward of deallocating bit
 #define SIDE_TABLE_RC_PINNED         (1UL<<(WORD_BITS-1))
@@ -282,7 +282,7 @@ storeWeak(id *location, objc_object *newObj)
     // Order by lock address to prevent lock ordering problems. 
     // Retry if the old value changes underneath us.
  retry:
-    if (haveOld) {// 如果weak ptr之前弱引用过一个obj，则将这个obj所对应的SideTable取出，赋值给oldTable
+    if (haveOld) {//释放时:newObj为空,需要根据地址weak指针地址来查找oldTable
         oldObj = *location;
         oldTable = &SideTables()[oldObj];
     } else {
@@ -327,13 +327,13 @@ storeWeak(id *location, objc_object *newObj)
     // 将 weak ptr地址 从obj的weak_entry_t中移除 Clean up old value, if any.
     // 释放的时候会走这里
     if (haveOld) {
-        weak_unregister_no_lock(&oldTable->weak_table, oldObj, location);// 如果weak_ptr之前弱引用过别的对象oldObj，则调用weak_unregister_no_lock，在oldObj的weak_entry_t中移除该weak_ptr地址
+        weak_unregister_no_lock(&oldTable->weak_table, oldObj, location);//销毁
     }
 
     // Assign new value, if any.
-    if (haveNew) {// 如果weak_ptr需要弱引用新的对象newObj
-        // (1) 调用weak_register_no_lock方法，将weak ptr的地址记录到newObj对应的weak_entry_t中
-        //将 weak ptr地址 注册到obj对应的weak_entry_t中
+    if (haveNew) {
+        
+        //核心功能:新建weak_t或追加在weak_t中
         newObj = (objc_object *)
             weak_register_no_lock(&newTable->weak_table, (id)newObj, location, 
                                   crashIfDeallocating);
@@ -407,7 +407,7 @@ objc_storeWeakOrNil(id *location, id newObj)
  * This function IS NOT thread-safe with respect to concurrent 
  * modifications to the weak variable. (Concurrent weak clear is safe.)
  * 就对弱变量的并发修改而言，这个函数不是线程安全的。(并发弱清除安全。)
- * @param location Address of __weak ptr. 
+ * @param location Address of __weak ptr. __weak指针的地址:location = &weakPerson
  * @param newObj Object ptr. 
  */
 id
@@ -580,6 +580,8 @@ objc_moveWeak(id *dst, id *src)
 }
 
 #pragma mark - AutoreleasePoolPage
+
+
 /***********************************************************************
    Autorelease pool implementation
 
@@ -639,7 +641,7 @@ struct magic_t {
 #   undef M1
 };
     
-
+//autoreleasepool数据结构
 class AutoreleasePoolPage 
 {
     // EMPTY_POOL_PLACEHOLDER is stored in TLS when exactly one pool is 
@@ -648,7 +650,7 @@ class AutoreleasePoolPage
     // never uses them.
 #   define EMPTY_POOL_PLACEHOLDER ((id*)1)
 
-#   define POOL_BOUNDARY nil
+#   define POOL_BOUNDARY nil //边界
     static pthread_key_t const key = AUTORELEASE_POOL_KEY;
     static uint8_t const SCRIBBLE = 0xA3;  // 0xA3A3A3A3 after releasing
     static size_t const SIZE = 
@@ -660,11 +662,11 @@ class AutoreleasePoolPage
     static size_t const COUNT = SIZE / sizeof(id);
 
     magic_t const magic;
-    id *next;
+    id *next;//数组
     pthread_t const thread;
-    AutoreleasePoolPage * const parent;
-    AutoreleasePoolPage *child;
-    uint32_t const depth;
+    AutoreleasePoolPage * const parent;//page树的结构
+    AutoreleasePoolPage *child;//
+    uint32_t const depth;//深度
     uint32_t hiwat;
 
     // SIZE-sizeof(*this) bytes of contents follow
@@ -759,19 +761,19 @@ class AutoreleasePoolPage
     id * end() {
         return (id *) ((uint8_t *)this+SIZE);
     }
-
+//判空
     bool empty() {
         return next == begin();
     }
-
+//填满
     bool full() { 
         return next == end();
     }
-
+//不超过一半
     bool lessThanHalfFull() {
         return (next - begin() < (end() - begin()) / 2);
     }
-
+//添加
     id *add(id obj)
     {
         assert(!full());
@@ -781,7 +783,7 @@ class AutoreleasePoolPage
         protect();
         return ret;
     }
-
+//释放
     void releaseAll() 
     {
         releaseUntil(begin());
@@ -798,7 +800,7 @@ class AutoreleasePoolPage
             AutoreleasePoolPage *page = hotPage();
 
             // fixme I think this `while` can be `if`, but I can't prove it
-            while (page->empty()) {
+            while (page->empty()) {//page为空时，查找parent为hotPage
                 page = page->parent;
                 setHotPage(page);
             }
@@ -929,9 +931,9 @@ class AutoreleasePoolPage
     static inline id *autoreleaseFast(id obj)
     {
         AutoreleasePoolPage *page = hotPage();
-        if (page && !page->full()) {
-            return page->add(obj);
-        } else if (page) {
+        if (page && !page->full()) {//page存在且没有满
+            return page->add(obj);//添加obj
+        } else if (page) {//page存在且满了，需要分配新的页
             return autoreleaseFullPage(obj, page);
         } else {
             return autoreleaseNoPage(obj);
@@ -1768,7 +1770,7 @@ callAlloc(Class cls, bool checkNil, bool allocWithZone=false)
 
 
 // Base class implementation of +alloc. cls is not nil.
-// Calls [cls allocWithZone:nil].
+// Calls [cls allocWithZone:nil].(一个内存的分配，一个isa标志位初始化)
 id
 _objc_rootAlloc(Class cls)
 {
@@ -1811,6 +1813,7 @@ _objc_rootInit(id obj)
 {
     // In practice, it will be hard to rely on this function.
     // Many classes do not properly chain -init calls.
+    //实际上，很难依靠这个功能。许多类不能正确地链接-init调用。
     return obj;
 }
 

@@ -170,13 +170,13 @@ static void append_referrer(weak_entry_t *entry, objc_object **new_referrer)
  * Does not remove duplicates, because duplicates should not exist. 
  * 
  * @todo this is slow if old_referrer is not present. Is this ever the case? 
- *
+ * 移除
  * @param entry The entry holding the referrers.
  * @param old_referrer The referrer to remove. 
  */
 static void remove_referrer(weak_entry_t *entry, objc_object **old_referrer)
 {
-    if (! entry->out_of_line()) {
+    if (! entry->out_of_line()) {//静态数组
         for (size_t i = 0; i < WEAK_INLINE_COUNT; i++) {
             if (entry->inline_referrers[i] == old_referrer) {
                 entry->inline_referrers[i] = nil;
@@ -191,7 +191,7 @@ static void remove_referrer(weak_entry_t *entry, objc_object **old_referrer)
         objc_weak_error();
         return;
     }
-
+    //动态数组
     size_t begin = w_hash_pointer(old_referrer) & (entry->mask);
     size_t index = begin;
     size_t hash_displacement = 0;
@@ -314,7 +314,7 @@ static void weak_entry_remove(weak_table_t *weak_table, weak_entry_t *entry)
  *
  * @param weak_table 
  * @param referent The object. Must not be nil.
- * 
+ * 查找
  * @return The table of weak referrers to this object. 
  */
 static weak_entry_t *
@@ -351,7 +351,7 @@ weak_entry_for_referent(weak_table_t *weak_table, objc_object *referent)
  * 
  * FIXME currently requires old referent value to be passed in (lame)
  * FIXME unregistration should be automatic if referrer is collected
- * 
+ * 销毁对象
  * @param weak_table The global weak table.
  * @param referent The object.
  * @param referrer The weak reference.
@@ -367,7 +367,7 @@ weak_unregister_no_lock(weak_table_t *weak_table, id referent_id,
     // 如果referent为nil 或 referent 采用了TaggedPointer计数方式，直接返回，不做任何操作
     if (!referent) return;
 
-    if ((entry = weak_entry_for_referent(weak_table, referent))) {// 查找到referent所对应的weak_entry_t
+    if ((entry = weak_entry_for_referent(weak_table, referent))) {// 查找
         remove_referrer(entry, referrer);// 在referent所对应的weak_entry_t的hash数组中，移除referrer
         
         // 移除元素之后， 要检查一下weak_entry_t的hash数组是否已经空了
@@ -398,17 +398,17 @@ weak_unregister_no_lock(weak_table_t *weak_table, id referent_id,
 /** 
  * Registers a new (object, weak pointer) pair. Creates a new weak
  * object entry if it does not exist.
- * 
+ * 注册对象
  * @param weak_table The global weak table.
- * @param referent The object pointed to by the weak reference.
- * @param referrer The weak pointer address.
+ * @param referent The object pointed to by the weak reference.对象指针
+ * @param referrer The weak pointer address.weak指针地址
  */
 id 
 weak_register_no_lock(weak_table_t *weak_table, id referent_id, 
                       id *referrer_id, bool crashIfDeallocating)
 {
-    objc_object *referent = (objc_object *)referent_id;
-    objc_object **referrer = (objc_object **)referrer_id;
+    objc_object *referent = (objc_object *)referent_id;//对象指针
+    objc_object **referrer = (objc_object **)referrer_id;//指针地址
 
     // 如果referent为nil 或 referent 采用了TaggedPointer计数方式，直接返回，不做任何操作
     if (!referent  ||  referent->isTaggedPointer()) return referent_id;

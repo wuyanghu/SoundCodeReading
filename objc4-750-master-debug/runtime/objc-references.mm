@@ -151,12 +151,12 @@ namespace objc_references_support {
     typedef uintptr_t disguised_ptr_t;
     inline disguised_ptr_t DISGUISE(id value) { return ~uintptr_t(value); }
     inline id UNDISGUISE(disguised_ptr_t dptr) { return id(~dptr); }
-  
+  //关联对象model
     class ObjcAssociation {
         uintptr_t _policy;
         id _value;
     public:
-        ObjcAssociation(uintptr_t policy, id value) : _policy(policy), _value(value) {}
+        ObjcAssociation(uintptr_t policy, id value) : _policy(policy), _value(value) {}//构造函数，初始化对象
         ObjcAssociation() : _policy(0), _value(nil) {}
 
         uintptr_t policy() const { return _policy; }
@@ -183,6 +183,8 @@ namespace objc_references_support {
     };
 #endif
 }
+
+#pragma mark - 关联对象
 
 using namespace objc_references_support;
 
@@ -279,7 +281,7 @@ void _object_set_associative_reference(id object, void *key, id value, uintptr_t
         if (new_value) {
             // break any existing association.
             AssociationsHashMap::iterator i = associations.find(disguised_object);
-            //同一个对象只会创建一个ObjectAssociationMap对象。
+            //同一个对象只会创建一个ObjectAssociationMap对象。？
             if (i != associations.end()) {
                 // secondary table exists
                 //当前对象已经创建关联对象时
