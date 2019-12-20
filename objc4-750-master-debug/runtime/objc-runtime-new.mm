@@ -2581,7 +2581,7 @@ void _read_images(header_info **hList, uint32_t hCount, int totalClasses, int un
         int namedClassesSize = 
             (isPreoptimized() ? unoptimizedTotalClasses : totalClasses) * 4 / 3;//4/3分配内存大小
         gdb_objc_realized_classes =
-            NXCreateMapTable(NXStrValueMapPrototype, namedClassesSize);//这是数组?需要初始化大小
+            NXCreateMapTable(NXStrValueMapPrototype, namedClassesSize);//这是动态数组,需要初始化大小
         
         allocatedClasses = NXCreateHashTable(NXPtrPrototype, 0, nil);//初始化一个字典
         

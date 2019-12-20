@@ -51,7 +51,7 @@ typedef struct objc_category *Category;
 
 /// An opaque type that represents an Objective-C declared property.
 typedef struct objc_property *objc_property_t;
-
+//类的数据结构
 struct objc_class {
     Class _Nonnull isa  OBJC_ISA_AVAILABILITY;
 
@@ -61,10 +61,11 @@ struct objc_class {
     long version                                             OBJC2_UNAVAILABLE;
     long info                                                OBJC2_UNAVAILABLE;
     long instance_size                                       OBJC2_UNAVAILABLE;
-    struct objc_ivar_list * _Nullable ivars                  OBJC2_UNAVAILABLE;
-    struct objc_method_list * _Nullable * _Nullable methodLists                    OBJC2_UNAVAILABLE;
-    struct objc_cache * _Nonnull cache                       OBJC2_UNAVAILABLE;
-    struct objc_protocol_list * _Nullable protocols          OBJC2_UNAVAILABLE;
+    //对于objc_class不区分实例与类方法的
+    struct objc_ivar_list * _Nullable ivars                  OBJC2_UNAVAILABLE;//成员变量
+    struct objc_method_list * _Nullable * _Nullable methodLists                    OBJC2_UNAVAILABLE;//方法列表
+    struct objc_cache * _Nonnull cache                       OBJC2_UNAVAILABLE;//缓存
+    struct objc_protocol_list * _Nullable protocols          OBJC2_UNAVAILABLE;//协议列表
 #endif
 
 } OBJC2_UNAVAILABLE;

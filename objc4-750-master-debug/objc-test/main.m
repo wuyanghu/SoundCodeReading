@@ -13,6 +13,7 @@
 #import "Person+Test2.h"
 #import "NSObject+AddParams.h"
 #import "MessageSend.h"
+#import "Student.h"
 
 void printMethodNamesOfClass(Class cls);//打印类的所有分类
 void associated(Person * obj);//关联对象
@@ -41,6 +42,8 @@ int main(int argc, const char * argv[]) {
         weak(person);
         
         messageSend();
+        
+        [Student new];
     }
     return 0;
 }
