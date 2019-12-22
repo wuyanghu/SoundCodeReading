@@ -222,7 +222,7 @@ struct entsize_list_tt {
 struct method_t {
     SEL name;//名称
     const char *types;//类型:v16@0:8
-    MethodListIMP imp;
+    MethodListIMP imp;//方法签名:如:(objc-test`-[Person addDynamicWalkInstance] at Person.m:36)
 
     //通过名称排序
     struct SortBySELAddress :

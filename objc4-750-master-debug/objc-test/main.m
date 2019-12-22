@@ -54,8 +54,10 @@ void messageSend(){
     [send message];
     [send baseMessage];
     
+    [[Person new] run];
     [[Person new] walkInstance];//消息转发
     [Person walkClass];
+    [Person walkClass3];
 }
 
 //strong源码分析

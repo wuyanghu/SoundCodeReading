@@ -224,7 +224,9 @@ disableSharedCacheOptimizations(void)
 bool method_list_t::isFixedUp() const {
     return flags() == fixed_up_method_list;
 }
-
+/*
+ _read_images->realizeClass->methodizeClass->prepareMethodLists->fixupMethodList(排序方法)->setFixedUp设置标记位
+ */
 void method_list_t::setFixedUp() {
     runtimeLock.assertLocked();
     assert(!isFixedUp());
@@ -707,7 +709,7 @@ fixupMethodList(method_list_t *mlist, bool bundleCopy, bool sort)
     }
 
     // Sort by selector address.
-    if (sort) {
+    if (sort) {//通过selector name 排序
         method_t::SortBySELAddress sorter;
         std::stable_sort(mlist->begin(), mlist->end(), sorter);
     }
@@ -2002,7 +2004,7 @@ static Class realizeClass(Class cls)
     }
 
     // Attach categories
-    methodizeClass(cls);//附加类别
+    methodizeClass(cls);//附加类别:在这之前类的所有方法已加载完成
 
     return cls;
 }
@@ -4789,6 +4791,12 @@ static method_t *search_method_list(const method_list_t *mlist, SEL sel)
 
     return nil;
 }
+/*
+ data()查找->如果是排序的则二分查找，否则线性查找
+ 问题：什么时候线性查找，什么时候二分查找
+ 暂时理解：在程序启动加载时存在未排序情况，是线性查找；运行时的消息查找是二分查找。
+ 在排序完成后会设置标志位，fixed_up_method_list
+ */
 
 static method_t *
 getMethodNoSuper_nolock(Class cls, SEL sel)
@@ -4805,7 +4813,7 @@ getMethodNoSuper_nolock(Class cls, SEL sel)
          ++mlists)
     {
         method_t *m = search_method_list(*mlists, sel);
-        if (m) return m;
+        if (m) return m;//找到即return
     }
 
     return nil;
@@ -4863,8 +4871,8 @@ Method class_getInstanceMethod(Class cls, SEL sel)
     // wants a Method instead of an IMP.
 
 #warning fixme build and search caches
-        
-    // Search method lists, try method resolver, etc.
+    //修复构建和搜索缓存
+    // Search method lists, try method resolver, etc.(搜索方法列表，尝试方法解析器)
     lookUpImpOrNil(cls, sel, nil, 
                    NO/*initialize*/, NO/*cache*/, YES/*resolver*/);
 
@@ -5763,6 +5771,14 @@ BOOL class_conformsToProtocol(Class cls, Protocol *proto_gen)
 * addMethod
 * fixme
 * Locking: runtimeLock must be held by the caller
+ 当前类方法找通过name查找
+ 找到了
+ 1.替换成新的?如果添加的方法是已存在的，会替换成我的那个吗？
+ 没找到
+ 1.分配一个method_list_t结构体，赋值name,imp,type
+ 2.修正方法排序
+ 3.添加到cls->data()->methods中
+ 4.填充到缓存
 **********************************************************************/
 static IMP 
 addMethod(Class cls, SEL name, IMP imp, const char *types, bool replace)
@@ -5795,9 +5811,9 @@ addMethod(Class cls, SEL name, IMP imp, const char *types, bool replace)
         newlist->first.types = strdupIfMutable(types);
         newlist->first.imp = imp;
 
-        prepareMethodLists(cls, &newlist, 1, NO, NO);
-        cls->data()->methods.attachLists(&newlist, 1);
-        flushCaches(cls);
+        prepareMethodLists(cls, &newlist, 1, NO, NO);//修正排序
+        cls->data()->methods.attachLists(&newlist, 1);//添加到data()->methods中
+        flushCaches(cls);//添加完成填充到缓存
 
         result = nil;
     }

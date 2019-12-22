@@ -626,7 +626,7 @@ static void _class_resolveInstanceMethod(Class cls, SEL sel, id inst)
     }
 
     BOOL (*msg)(Class, SEL, SEL) = (typeof(msg))objc_msgSend;
-    bool resolved = msg(cls, SEL_resolveInstanceMethod, sel);
+    bool resolved = msg(cls, SEL_resolveInstanceMethod, sel);//通过objc_msgSend调用类中的+ (BOOL)resolveInstanceMethod:(SEL)sel方法
 
     // Cache the result (good or bad) so the resolver doesn't fire next time.
     // +resolveInstanceMethod adds to self a.k.a. cls

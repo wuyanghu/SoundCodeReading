@@ -17,6 +17,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)walkInstance;
 + (void)walkClass;
++ (void)walkClass3;
 @end
 
 NS_ASSUME_NONNULL_END

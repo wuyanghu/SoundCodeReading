@@ -24,13 +24,17 @@
      在类方法中,self与self.class都是当前的类对象,self.class多调用了一次+ (Class)class,返回的是当前类对象本身的self
  */
 
-- (void)walkInstance {
-    NSLog(@"%s", __func__);
-    /*
-     1.self.class:此时self是一个实例对象,self.class会通过实例的对象的isa查找对应的class类对象
-     2.self.class walkClass 调用类对象的方法
-     */
-    [self.class walkClass];
+//- (void)walkInstance {
+//    NSLog(@"%s", __func__);
+//    /*
+//     1.self.class:此时self是一个实例对象,self.class会通过实例的对象的isa查找对应的class类对象
+//     2.self.class walkClass 调用类对象的方法
+//     */
+//    [self.class walkClass];
+//}
+
+- (void)addDynamicWalkInstance{
+    NSLog(@"addDynamicWalkInstance");
 }
 
 + (void)walkClass{
@@ -48,12 +52,11 @@
     NSLog(@"%s", __func__);
 }
 
-
 //动态方法解析
 + (BOOL)resolveInstanceMethod:(SEL)sel {
     NSLog(@"%s", __func__);
     if (sel == @selector(walkInstance)) {
-        Method runMethod = class_getInstanceMethod(self, @selector(walkInstance));
+        Method runMethod = class_getInstanceMethod(self, @selector(addDynamicWalkInstance));//方法的二分查找
         IMP runIMP = method_getImplementation(runMethod);
         const char* types = method_getTypeEncoding(runMethod);
         NSLog(@"%s", types);
@@ -65,12 +68,12 @@
 
 + (BOOL)resolveClassMethod:(SEL)sel {
     
-    if (sel == @selector(walkClass)) {
+    if (sel == @selector(walkClass3)) {
         Method runMethod = class_getClassMethod(self, @selector(walkClass));
         IMP runIMP = method_getImplementation(runMethod);
         const char* types = method_getTypeEncoding(runMethod);
         NSLog(@"%s", types);
-        return class_addMethod(object_getClass(self), sel, runIMP, types);
+        return class_addMethod(object_getClass(self), sel, runIMP, types);//类的isa指针?
     }
     return [super resolveClassMethod:sel];
 }
