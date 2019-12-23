@@ -1476,7 +1476,7 @@ foreach_realized_class_and_subclass(Class top,
     });
 }
 
-// Enumerates all realized classes and metaclasses.
+// Enumerates all realized classes and metaclasses.枚举所有已实现的类和元类。
 static inline void
 foreach_realized_class_and_metaclass(std::function<void (Class)> code) 
 {

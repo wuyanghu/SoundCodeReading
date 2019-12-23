@@ -687,7 +687,7 @@ void _class_resolveMethod(Class cls, SEL sel, id inst)
 Method class_getClassMethod(Class cls, SEL sel)
 {
     if (!cls  ||  !sel) return nil;
-
+//getMeta对isa查找的封装,如果是元类返回self,如果是类则返回isa。与self.class查找有点像
     return class_getInstanceMethod(cls->getMeta(), sel);//cls->getMeta()不是类对象，是元类
 }
 

@@ -1559,7 +1559,7 @@ Class _class_getNonMetaClass(Class cls, id obj)
 
 /***********************************************************************
 * addRootClass
-* Adds cls as a new realized root class.
+* Adds cls as a new realized root class.将cls添加为新的已实现的根类。
 * Locking: runtimeLock must be held by the caller.
 **********************************************************************/
 static Class _firstRealizedClass = nil;
@@ -1887,7 +1887,10 @@ static void reconcileInstanceVariables(Class cls, Class supercls, const class_ro
  * realizeClass:实现cls:设置ro、rw,各种标志位,父类、元类,类别等
 * Performs first-time initialization on class cls, 
 * including allocating its read-write data.
-* Returns the real class structure for the class. 
+* Returns the real class structure for the class.
+ 对类cls进行首次初始化，
+ *包括分配其读写数据。
+ *返回该类的真实类结构。
 * Locking: runtimeLock must be write-locked by the caller
 **********************************************************************/
 static Class realizeClass(Class cls)
@@ -2002,6 +2005,11 @@ static Class realizeClass(Class cls)
     } else {
         addRootClass(cls);
     }
+    /////测试数据
+    if(strcmp(class_getName(cls),"Person")==0){
+        printf("realizeClass 类名 %s.\n",class_getName(cls));
+    }
+    //////
 
     // Attach categories
     methodizeClass(cls);//附加类别:在这之前类的所有方法已加载完成
@@ -2140,9 +2148,11 @@ BOOL _class_isFutureClass(Class cls)
 /***********************************************************************
 * _objc_flush_caches
 * Flushes all caches.
-* (Historical behavior: flush caches for cls, its metaclass, 
-* and subclasses thereof. Nil flushes all classes.)
+* (Historical behavior: flush caches for cls, its metaclass,
+and subclasses thereof. Nil flushes all classes.)
 * Locking: acquires runtimeLock
+ *刷新所有缓存。
+ *（历史行为：刷新cls，其元类及其子类的缓存。Nil刷新所有类。）
 **********************************************************************/
 static void flushCaches(Class cls)
 {
@@ -3122,13 +3132,13 @@ method_setImplementation(Method m, IMP imp)
     return _method_setImplementation(Nil, m, imp);
 }
 
-
+//方法交换
 void method_exchangeImplementations(Method m1, Method m2)
 {
-    if (!m1  ||  !m2) return;
+    if (!m1  ||  !m2) return;//m1,m2都不能为空
 
     mutex_locker_t lock(runtimeLock);
-
+//本质交换了imp,name和types没变，不影响正常调用
     IMP m1_imp = m1->imp;
     m1->imp = m2->imp;
     m2->imp = m1_imp;
@@ -3137,6 +3147,9 @@ void method_exchangeImplementations(Method m1, Method m2)
     // RR/AWZ updates are slow because class is unknown
     // Cache updates are slow because class is unknown
     // fixme build list of classes whose Methods are known externally?
+    //RR / AWZ更新缓慢，因为类别未知
+         //由于类未知，缓存更新速度很慢
+         // fixme构建其方法在外部为人所知的类的列表？
 
     flushCaches(nil);
 
@@ -4913,6 +4926,8 @@ log_and_fill_cache(Class cls, IMP imp, SEL sel, id receiver, Class implementer)
 * _class_lookupMethodAndLoadCache.
 * Method lookup for dispatchers ONLY. OTHER CODE SHOULD USE lookUpImp().
 * This lookup avoids optimistic cache scan because the dispatcher already tried that.
+ 仅用于调度程序的方法查找。 其他代码应使用lookUpImp（）。
+ 此查找避免了乐观的缓存扫描，因为调度程序已经尝试过了。
 **********************************************************************/
 IMP _class_lookupMethodAndLoadCache3(id obj, SEL sel, Class cls)
 {
@@ -4932,13 +4947,31 @@ IMP _class_lookupMethodAndLoadCache3(id obj, SEL sel, Class cls)
 * May return _objc_msgForward_impcache. IMPs destined for external use 
 *   must be converted to _objc_msgForward or _objc_msgForward_stret.
 *   If you don't want forwarding at all, use lookUpImpOrNil() instead.
+ 标准的IMP查找。
+ * initialize == NO尝试避免+ initialize（但有时会失败）。
+ * cache == NO跳过乐观的未锁定查找（但在其他地方使用缓存）
+ *大多数调用者应使用initialize == YES和cache == YES。
+ * inst是cls或其子类的实例；如果未知，则为nil。
+ *如果cls是未初始化的元类，则非nil inst会更快。
+ *可能会返回_objc_msgForward_impcache。 供外部使用的IMP
+ *必须转换为_objc_msgForward或_objc_msgForward_stret。
+ *如果根本不想转发，请改用lookUpImpOrNil（）。
+ 
+ cls:是通过汇编带入的参数;如果是实例方法调用:cls是类对象,如果是类方法调用,cls是元类。
 **********************************************************************/
 IMP lookUpImpOrForward(Class cls, SEL sel, id inst, 
                        bool initialize, bool cache, bool resolver)
 {
     IMP imp = nil;
     bool triedResolver = NO;
-
+    /////测试数据
+    if(strcmp(class_getName(cls),"Person")==0){
+        printf("lookUpImpOrForward 类名 %s.\n",class_getName(cls));
+        if (strcmp(sel_getName(sel),"run")==0) {
+            printf("lookUpImpOrForward 方法名 %s.\n",sel_getName(sel));
+        }
+    }
+    //////
     runtimeLock.assertUnlocked();
 /*
  1.在当前类查找
@@ -5491,7 +5524,7 @@ void objc_class::chooseClassArrayIndex()
 
 
 /***********************************************************************
-* Update custom RR and AWZ when a method changes its IMP
+* Update custom RR and AWZ when a method changes its IMP当方法更改其IMP时更新自定义RR和AWZ
 **********************************************************************/
 static void
 updateCustomRR_AWZ(Class cls, method_t *meth)
@@ -5504,6 +5537,14 @@ updateCustomRR_AWZ(Class cls, method_t *meth)
     // if the swizzled method is one of the methods that is assumed to be 
     // non-custom. These special cases are listed in setInitialized().
     // We look for such cases here.
+    //在几乎所有情况下，IMP混乱都不会影响自定义RR / AWZ位。
+         //自定义RR / AWZ搜索将已经找到方法，无论是否
+         //它已陷入困境，因此不会从非定制过渡到定制。
+         //
+         //只有IMP泛滥会影响RR / AWZ位的情况是
+         //如果swizzled方法是假定为以下方法之一
+         //非自定义。 这些特殊情况在setInitialized（）中列出。
+         //我们在这里寻找这种情况。
 
     if (isRRSelector(meth->name)) {
         

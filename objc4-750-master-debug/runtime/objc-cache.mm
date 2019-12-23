@@ -609,6 +609,8 @@ void cache_fill(Class cls, SEL sel, IMP imp, id receiver)
 
 // Reset this entire cache to the uncached lookup by reallocating it.
 // This must not shrink the cache - that breaks the lock-free scheme.
+//通过重新分配整个缓存，将其重置为未缓存的查询。
+//这一定不能缩小缓存-这会破坏无锁方案。
 void cache_erase_nolock(Class cls)
 {
     cacheUpdateLock.assertLocked();

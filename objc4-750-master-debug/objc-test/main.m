@@ -28,36 +28,45 @@ int main(int argc, const char * argv[]) {
 //        id newObject = [[newClass alloc]init];
 //        NSLog(@"%@",newObject);
         
-//        Person * person = [[Person alloc] init];
+        Person * person = [[Person alloc] init];
 //        Person * person2 = [Person new];//[callAlloc(self, false/*checkNil*/) init] 与上面等价
 //        Person * person2 = [Person alloc];
 //        person2 = [person2 init];
-//        [person test];
-//        [person test];
-//        
-//        printMethodNamesOfClass([Person class]);
-//        associated(person);
+        [person test];
 //
-//        strong(person);
-//        weak(person);
+//        printMethodNamesOfClass([Person class]);
+        associated(person);
+        strong(person);
+        weak(person);
         
         messageSend();
-        
-//        [Student new];
     }
     return 0;
 }
 //消息发送
 void messageSend(){
+    [Student new];//子类与父类关系调用
+    //消息发送
     MessageSend * send = [MessageSend new];
     [send message];
     [send message];
     [send baseMessage];
     
-//    [[Person new] run];
-//    [[Person new] walkInstance];//消息转发
-//    [Person walkClass];
-    [Person walkClass3];
+    Person * person = [[Person alloc] init];
+    
+    [person instanceMethodSelf];//实例方法中self代表什么
+    [Person classMethodSelf];//类方法中self代表什么
+    
+    [person performSelector:@selector(run)];
+    [person testExchangeMethod];//实例方法交换
+    [Person testExchangeMethod];//静态方法交换
+    
+    [person addDynamicInstanceMethod];//动态添加实例方法
+    [Person addDynamicClassMethod];//动态添加类方法
+    
+    Class metaClass = objc_getMetaClass("Person");//可以获取元类
+    [Person classSendMessage];//验证类对象发送消息是通过isa找到元类
+    [person instanceSendMessage];//验证实例对象发送消息是通过isa找到类
 }
 
 //strong源码分析

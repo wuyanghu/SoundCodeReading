@@ -2139,6 +2139,8 @@ void arr_init(void)
     return object_getMethodImplementation(self, sel);
 }
 
+#pragma mark - 方法没找到尝试重新解决
+
 + (BOOL)resolveClassMethod:(SEL)sel {
     return NO;
 }
@@ -2146,6 +2148,8 @@ void arr_init(void)
 + (BOOL)resolveInstanceMethod:(SEL)sel {
     return NO;
 }
+
+#pragma mark - 方法未识别日志
 
 // Replaced by CF (throws an NSException)
 + (void)doesNotRecognizeSelector:(SEL)sel {

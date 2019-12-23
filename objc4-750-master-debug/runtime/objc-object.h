@@ -147,7 +147,7 @@ objc_object::isExtTaggedPointer()
 
 
 #if SUPPORT_NONPOINTER_ISA
-
+//isa
 inline Class 
 objc_object::ISA() 
 {
@@ -211,7 +211,7 @@ objc_object::initIsa(Class cls, bool nonpointer, bool hasCxxDtor)
     assert(!isTaggedPointer()); 
     /////测试数据
     if(strcmp(class_getName(cls),"Person")==0){
-        printf("类名 %s.",class_getName(cls));
+        printf("initIsa 类名 %s.\n",class_getName(cls));
     }
     //////
 

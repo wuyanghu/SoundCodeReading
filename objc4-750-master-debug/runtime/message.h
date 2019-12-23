@@ -54,7 +54,14 @@ struct objc_super {
  * On some architectures, use objc_msgSend_fp2ret for some float return types.
  *
  * These functions must be cast to an appropriate function pointer type 
- * before being called. 
+ * before being called.
+   基本消息基元
+   *
+   *在某些体系结构上，将objc_msgSend_stret用于某些结构返回类型。
+   *在某些体系结构上，将objc_msgSend_fpret用于某些浮点返回类型。
+   *在某些体系结构上，将objc_msgSend_fp2ret用于某些浮点返回类型。
+   *
+   *在调用这些函数之前，必须将它们转换为适当的函数指针类型。
  */
 #if !OBJC_OLD_DISPATCH_PROTOTYPES
 OBJC_EXPORT void
