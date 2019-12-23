@@ -28,22 +28,22 @@ int main(int argc, const char * argv[]) {
 //        id newObject = [[newClass alloc]init];
 //        NSLog(@"%@",newObject);
         
-        Person * person = [[Person alloc] init];
-        Person * person2 = [Person new];//[callAlloc(self, false/*checkNil*/) init] 与上面等价
+//        Person * person = [[Person alloc] init];
+//        Person * person2 = [Person new];//[callAlloc(self, false/*checkNil*/) init] 与上面等价
 //        Person * person2 = [Person alloc];
 //        person2 = [person2 init];
 //        [person test];
 //        [person test];
 //        
 //        printMethodNamesOfClass([Person class]);
-        associated(person);
-
-        strong(person);
-        weak(person);
+//        associated(person);
+//
+//        strong(person);
+//        weak(person);
         
         messageSend();
         
-        [Student new];
+//        [Student new];
     }
     return 0;
 }
@@ -54,9 +54,9 @@ void messageSend(){
     [send message];
     [send baseMessage];
     
-    [[Person new] run];
-    [[Person new] walkInstance];//消息转发
-    [Person walkClass];
+//    [[Person new] run];
+//    [[Person new] walkInstance];//消息转发
+//    [Person walkClass];
     [Person walkClass3];
 }
 

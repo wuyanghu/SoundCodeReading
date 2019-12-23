@@ -1296,6 +1296,7 @@ struct objc_class : objc_object {
     }
 
     // NOT identical to this->ISA when this is a metaclass
+    // 如果是元类，返回当前this;如果是类，通过ISA找到类
     Class getMeta() {
         if (isMetaClass()) return (Class)this;
         else return this->ISA();

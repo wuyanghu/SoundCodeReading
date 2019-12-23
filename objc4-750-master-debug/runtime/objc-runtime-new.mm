@@ -2737,6 +2737,11 @@ void _read_images(header_info **hList, uint32_t hCount, int totalClasses, int un
                 cls->ISA()->cache._occupied = 0;
             }
 #endif
+            /////测试数据
+            if(strcmp(class_getName(cls),"Person")==0){
+                printf("类名 %s.",class_getName(cls));
+            }
+            //////
             
             addClassTableEntry(cls);//实例和类对象存入allocatedClasses
             realizeClass(cls);//实现cls:设置ro、rw,各种标志位,父类、元类,类别等
@@ -4977,7 +4982,7 @@ IMP lookUpImpOrForward(Class cls, SEL sel, id inst,
     if (!cls->isRealized()) {//如果sel中的cls没有实现
         realizeClass(cls);//实现cls
     }
-
+//用到才初始化
     if (initialize  &&  !cls->isInitialized()) {
         runtimeLock.unlock();
         _class_initialize (_class_getNonMetaClass(cls, inst));//初始化cls

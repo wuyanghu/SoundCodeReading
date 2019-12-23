@@ -177,7 +177,7 @@ objc_object::initIsa(Class cls)
 {
     initIsa(cls, false, false);
 }
-
+//类对象isa
 inline void 
 objc_object::initClassIsa(Class cls)
 {
@@ -187,13 +187,13 @@ objc_object::initClassIsa(Class cls)
         initIsa(cls, true/*nonpointer*/, false);
     }
 }
-
+//协议isa
 inline void
 objc_object::initProtocolIsa(Class cls)
 {
     return initClassIsa(cls);
 }
-
+//实例isa
 inline void 
 objc_object::initInstanceIsa(Class cls, bool hasCxxDtor)
 {
@@ -204,11 +204,17 @@ objc_object::initInstanceIsa(Class cls, bool hasCxxDtor)
 }
     
 //isa标志位
+//实际isa初始化入口
 inline void
 objc_object::initIsa(Class cls, bool nonpointer, bool hasCxxDtor) 
 { 
     assert(!isTaggedPointer()); 
-    
+    /////测试数据
+    if(strcmp(class_getName(cls),"Person")==0){
+        printf("类名 %s.",class_getName(cls));
+    }
+    //////
+
     if (!nonpointer) {
         isa.cls = cls;
     } else {

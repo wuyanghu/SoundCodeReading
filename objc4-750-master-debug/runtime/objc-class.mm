@@ -567,7 +567,7 @@ void fixupCopiedIvars(id newObject, id oldObject)
 /***********************************************************************
 * _class_resolveClassMethod
 * Call +resolveClassMethod, looking for a method to be added to class cls.
-* cls should be a metaclass.
+* cls should be a metaclass.cls应该是一个元类
 * Does not check if the method already exists.
 **********************************************************************/
 static void _class_resolveClassMethod(Class cls, SEL sel, id inst)
@@ -681,12 +681,14 @@ void _class_resolveMethod(Class cls, SEL sel, id inst)
 /***********************************************************************
 * class_getClassMethod.  Return the class method for the specified
 * class and selector.
+ 获取类方法，实际调用了class_getInstanceMethod方法
+ cls类对象,其方法实在元类中，cls->getMeta()获取cls对应的元类。
 **********************************************************************/
 Method class_getClassMethod(Class cls, SEL sel)
 {
     if (!cls  ||  !sel) return nil;
 
-    return class_getInstanceMethod(cls->getMeta(), sel);
+    return class_getInstanceMethod(cls->getMeta(), sel);//cls->getMeta()不是类对象，是元类
 }
 
 

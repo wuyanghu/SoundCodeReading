@@ -56,7 +56,7 @@
 + (BOOL)resolveInstanceMethod:(SEL)sel {
     NSLog(@"%s", __func__);
     if (sel == @selector(walkInstance)) {
-        Method runMethod = class_getInstanceMethod(self, @selector(addDynamicWalkInstance));//方法的二分查找
+        Method runMethod = class_getInstanceMethod(self, @selector(addDynamicWalkInstance));//方法的二分查找,self当前类对象
         IMP runIMP = method_getImplementation(runMethod);
         const char* types = method_getTypeEncoding(runMethod);
         NSLog(@"%s", types);
