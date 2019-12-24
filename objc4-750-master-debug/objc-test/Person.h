@@ -23,10 +23,12 @@ NS_ASSUME_NONNULL_BEGIN
 
 #pragma mark - 二次消息转发
 - (void)forwardingTargetMethod;
+- (void)forwardInvocation;
 #pragma mark - 动态添加方法
 - (void)addDynamicInstanceMethod;
 + (void)addDynamicClassMethod;
 #pragma mark - 方法交换测试
++ (void)testExchangeClassMethod2;
 - (void)testExchangeInstanceMethod;
 + (void)testExchangeClassMethod;
 @end

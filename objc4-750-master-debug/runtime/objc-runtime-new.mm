@@ -3098,8 +3098,8 @@ method_getTypeEncoding(Method m)
 
 /***********************************************************************
 * method_setImplementation
-* Sets this method's implementation to imp.
-* The previous implementation is returned.
+* Sets this method's implementation to imp.将此方法的实现设置为imp。
+* The previous implementation is returned.返回先前的实现。
 **********************************************************************/
 static IMP 
 _method_setImplementation(Class cls, method_t *m, IMP imp)
@@ -3132,7 +3132,7 @@ method_setImplementation(Method m, IMP imp)
     return _method_setImplementation(Nil, m, imp);
 }
 
-//方法交换
+//已实现了方法交换:m1，m2已存在
 void method_exchangeImplementations(Method m1, Method m2)
 {
     if (!m1  ||  !m2) return;//m1,m2都不能为空
@@ -5812,16 +5812,18 @@ BOOL class_conformsToProtocol(Class cls, Protocol *proto_gen)
     return NO;
 }
 
+#pragma mark - 方法添加
 
 /**********************************************************************
 * addMethod
 * fixme
 * Locking: runtimeLock must be held by the caller
- 当前类方法找通过name查找
+ 通过sel name查询类方法或元类列表
  找到了
- 1.替换成新的?如果添加的方法是已存在的，会替换成我的那个吗？
+ 1.replace为NO,不做处理，返回imp
+ 2.replace为YES,imp赋值给sel name对应的method_t
  没找到
- 1.分配一个method_list_t结构体，赋值name,imp,type
+ 1.分配一个method_list_t结构体，并赋值name,imp,type第一个
  2.修正方法排序
  3.添加到cls->data()->methods中
  4.填充到缓存
@@ -5839,14 +5841,14 @@ addMethod(Class cls, SEL name, IMP imp, const char *types, bool replace)
     assert(cls->isRealized());
 
     method_t *m;
-    if ((m = getMethodNoSuper_nolock(cls, name))) {
+    if ((m = getMethodNoSuper_nolock(cls, name))) {//SEL name已经实现
         // already exists
         if (!replace) {
-            result = m->imp;
+            result = m->imp;//name方法存在，返回对应的imp
         } else {
-            result = _method_setImplementation(cls, m, imp);
+            result = _method_setImplementation(cls, m, imp);//把m.imp=imp
         }
-    } else {
+    } else {//SEL name没有实现,imp和name赋给newlist->first
         // fixme optimize
         method_list_t *newlist;
         newlist = (method_list_t *)calloc(sizeof(*newlist), 1);
@@ -5945,7 +5947,7 @@ addMethods(Class cls, const SEL *names, const IMP *imps, const char **types,
     return failedNames;
 }
 
-
+//添加
 BOOL 
 class_addMethod(Class cls, SEL name, IMP imp, const char *types)
 {
@@ -5955,7 +5957,7 @@ class_addMethod(Class cls, SEL name, IMP imp, const char *types)
     return ! addMethod(cls, name, imp, types ?: "", NO);
 }
 
-
+//name可以不存在,addMethod会自动创建;如果存在name method_t.imp = imp
 IMP 
 class_replaceMethod(Class cls, SEL name, IMP imp, const char *types)
 {
@@ -5964,6 +5966,8 @@ class_replaceMethod(Class cls, SEL name, IMP imp, const char *types)
     mutex_locker_t lock(runtimeLock);
     return addMethod(cls, name, imp, types ?: "", YES);
 }
+
+#pragma mark ---
 
 
 SEL *

@@ -26,6 +26,7 @@
 		39ABD72312F0B61800D1054C /* objc-weak.h in Headers */ = {isa = PBXBuildFile; fileRef = 39ABD71F12F0B61800D1054C /* objc-weak.h */; };
 		39ABD72412F0B61800D1054C /* objc-weak.mm in Sources */ = {isa = PBXBuildFile; fileRef = 39ABD72012F0B61800D1054C /* objc-weak.mm */; };
 		4B26AAC82379816F0080D4B9 /* NSObject+AddParams.m in Sources */ = {isa = PBXBuildFile; fileRef = 4B26AAC72379816E0080D4B9 /* NSObject+AddParams.m */; };
+		4B524EE223B21A76005B6EDB /* MethodSignature.m in Sources */ = {isa = PBXBuildFile; fileRef = 4B524EE123B21A76005B6EDB /* MethodSignature.m */; };
 		5228CE7921C684D30001A999 /* _simple.h in Headers */ = {isa = PBXBuildFile; fileRef = 5228CE7821C684D30001A999 /* _simple.h */; };
 		5246421121C68926000909D5 /* isa.h in Headers */ = {isa = PBXBuildFile; fileRef = 5246421021C68926000909D5 /* isa.h */; };
 		5255259B21C68E3C00072CE6 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 5255259A21C68E3C00072CE6 /* main.m */; };
@@ -173,6 +174,8 @@
 		39ABD72012F0B61800D1054C /* objc-weak.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "objc-weak.mm"; path = "runtime/objc-weak.mm"; sourceTree = "<group>"; };
 		4B26AAC62379816E0080D4B9 /* NSObject+AddParams.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSObject+AddParams.h"; sourceTree = "<group>"; };
 		4B26AAC72379816E0080D4B9 /* NSObject+AddParams.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSObject+AddParams.m"; sourceTree = "<group>"; };
+		4B524EE023B21A76005B6EDB /* MethodSignature.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MethodSignature.h; sourceTree = "<group>"; };
+		4B524EE123B21A76005B6EDB /* MethodSignature.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MethodSignature.m; sourceTree = "<group>"; };
 		5228CE7821C684D30001A999 /* _simple.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = _simple.h; sourceTree = "<group>"; };
 		5246421021C68926000909D5 /* isa.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = isa.h; path = runtime/isa.h; sourceTree = SOURCE_ROOT; };
 		5255259821C68E3C00072CE6 /* objc-test */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "objc-test"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -412,6 +415,8 @@
 				768E7AE223799EC000EAAEE8 /* Person+Test2.m */,
 				760B3E6E23A1B67D00DD02B9 /* MessageSend.h */,
 				760B3E6F23A1B67D00DD02B9 /* MessageSend.m */,
+				4B524EE023B21A76005B6EDB /* MethodSignature.h */,
+				4B524EE123B21A76005B6EDB /* MethodSignature.m */,
 			);
 			path = "objc-test";
 			sourceTree = "<group>";
@@ -792,6 +797,7 @@
 				768E7ADD23799E3A00EAAEE8 /* Person.m in Sources */,
 				760B3E7023A1B67D00DD02B9 /* MessageSend.m in Sources */,
 				760E3B9C23AC49A500CEE42A /* Student.m in Sources */,
+				4B524EE223B21A76005B6EDB /* MethodSignature.m in Sources */,
 				4B26AAC82379816F0080D4B9 /* NSObject+AddParams.m in Sources */,
 				5255259B21C68E3C00072CE6 /* main.m in Sources */,
 			);

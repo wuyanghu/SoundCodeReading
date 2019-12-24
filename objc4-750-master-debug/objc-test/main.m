@@ -72,7 +72,9 @@ void messageSend(){
     [Person classSendMessage];//验证类对象发送消息是通过isa找到元类
     [person instanceSendMessage];//验证实例对象发送消息是通过isa找到类
     
+    [Person testExchangeClassMethod2];
     [person forwardingTargetMethod];//二次消息转发
+    [person forwardInvocation];//三次处理
 }
 
 //strong源码分析

@@ -21,4 +21,8 @@
     NSLog(@"消息发送");
 }
 
+- (void)forwardingTargetMethod{
+    NSLog(@"给我执行吗");
+}
+
 @end
