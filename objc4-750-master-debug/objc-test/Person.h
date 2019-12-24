@@ -20,12 +20,15 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark - 消息发送验证:实例是通过isa找到类对象，类对象通过isa找到元类对象
 - (void)instanceSendMessage;
 + (void)classSendMessage;
+
+#pragma mark - 二次消息转发
+- (void)forwardingTargetMethod;
 #pragma mark - 动态添加方法
 - (void)addDynamicInstanceMethod;
 + (void)addDynamicClassMethod;
 #pragma mark - 方法交换测试
-- (void)testExchangeMethod;
-+ (void)testExchangeMethod;
+- (void)testExchangeInstanceMethod;
++ (void)testExchangeClassMethod;
 @end
 
 NS_ASSUME_NONNULL_END

@@ -15,11 +15,12 @@
 #import "MessageSend.h"
 #import "Student.h"
 
+void methodInit(void);//方法初始化
 void printMethodNamesOfClass(Class cls);//打印类的所有分类
-void associated(Person * obj);//关联对象
-void weak(Person *person);//weak
+void associated(void);//关联对象
+void weak(void);//weak
 void messageSend(void);//消息发送
-void strong(Person *person);//strong源码分析
+void strong(void);//strong源码分析
 
 int main(int argc, const char * argv[]) {
     @autoreleasepool {
@@ -28,21 +29,24 @@ int main(int argc, const char * argv[]) {
 //        id newObject = [[newClass alloc]init];
 //        NSLog(@"%@",newObject);
         
-        Person * person = [[Person alloc] init];
-//        Person * person2 = [Person new];//[callAlloc(self, false/*checkNil*/) init] 与上面等价
-//        Person * person2 = [Person alloc];
-//        person2 = [person2 init];
-        [person test];
-//
-//        printMethodNamesOfClass([Person class]);
-        associated(person);
-        strong(person);
-        weak(person);
+        methodInit();
+        printMethodNamesOfClass([Person class]);
+        associated();
+        strong();
+        weak();
         
         messageSend();
     }
     return 0;
 }
+
+void methodInit(){
+    Person * person = [[Person alloc] init];
+    Person * person2 = [Person new];//[callAlloc(self, false/*checkNil*/) init] 与上面等价
+    Person * person3 = [Person alloc];
+    Person * person4 = [person3 init];
+}
+
 //消息发送
 void messageSend(){
     [Student new];//子类与父类关系调用
@@ -58,8 +62,8 @@ void messageSend(){
     [Person classMethodSelf];//类方法中self代表什么
     
     [person performSelector:@selector(run)];
-    [person testExchangeMethod];//实例方法交换
-    [Person testExchangeMethod];//静态方法交换
+    [person testExchangeInstanceMethod];//实例方法交换
+    [Person testExchangeClassMethod];//静态方法交换
     
     [person addDynamicInstanceMethod];//动态添加实例方法
     [Person addDynamicClassMethod];//动态添加类方法
@@ -67,10 +71,13 @@ void messageSend(){
     Class metaClass = objc_getMetaClass("Person");//可以获取元类
     [Person classSendMessage];//验证类对象发送消息是通过isa找到元类
     [person instanceSendMessage];//验证实例对象发送消息是通过isa找到类
+    
+    [person forwardingTargetMethod];//二次消息转发
 }
 
 //strong源码分析
-void strong(Person *person){
+void strong(){
+    Person * person = [[Person alloc] init];
     //指针地址指向指针
     Person *weakPerson = person;//相当于调了retain方法
     NSLog(@"person指针:%p\nweakPerson指针:%p",person,weakPerson);
@@ -79,7 +86,9 @@ void strong(Person *person){
 
 
 //weak源码分析
-void weak(Person *person){
+void weak(){
+    Person * person = [[Person alloc] init];
+
     //指针地址指向指针
     __weak Person *weakPerson = person;
     __weak Person *weakPerson2 = person;
@@ -88,7 +97,8 @@ void weak(Person *person){
 }
 
 //关联对象源码分析
-void associated(Person * obj){
+void associated(){
+    Person * obj = [[Person alloc] init];
     [obj setParams:@{@"key1":@"value1"}];//第一次关联对象
     [obj setParams:@{@"key2":@"valu2"}];//第二次关联对象
     

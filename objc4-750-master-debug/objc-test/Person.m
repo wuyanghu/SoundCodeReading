@@ -7,7 +7,7 @@
 
 #import "Person.h"
 #import <objc/runtime.h>
-
+#import "MessageSend.h"
 @implementation Person
 
 #pragma mark - 对象释放
@@ -58,11 +58,23 @@
     NSLog(@"类对象发送消息");
 }
 
+#pragma mark - 二次消息转发
+
+-(id)forwardingTargetForSelector:(SEL)aSelector{
+    if ([NSStringFromSelector(aSelector) isEqualToString:@"forwardingTargetMethod"]) {
+        return [MessageSend new];
+    }
+    return [super forwardingTargetForSelector:aSelector];
+}
+
+- (id)forwardingTarget{
+    return [Person new];
+}
+
 #pragma mark - 动态添加方法
 
 //动态方法解析
 + (BOOL)resolveInstanceMethod:(SEL)sel {
-    NSLog(@"%s", __func__);
     if (sel == @selector(addDynamicInstanceMethod)) {
         Method addMethod = class_getInstanceMethod(self, @selector(addDynamicInstanceMethodAfter));//方法的二分查找,self当前类对象
         IMP runIMP = method_getImplementation(addMethod);
@@ -97,28 +109,30 @@
 #pragma mark - 方法交换
 //方法交换
 + (void)load{
-    Method instanceMethod = class_getInstanceMethod(self, @selector(testExchangeMethod));
-    Method instanceMethodAfter = class_getInstanceMethod(self, @selector(testExchangeMethodAfter));
+    //self是类对象，testExchangeInstanceMethod是实例方法，查询实例方法需要在类方法中查询，即可直接在类对象中查询
+    Method instanceMethod = class_getInstanceMethod(self, @selector(testExchangeInstanceMethod));
+    Method instanceMethodAfter = class_getInstanceMethod(self, @selector(testExchangeInstanceMethodAfter));
     method_exchangeImplementations(instanceMethod, instanceMethodAfter);
     
-    Method classMethod = class_getClassMethod(self, @selector(testExchangeMethod));
-    Method classMethodAfter = class_getClassMethod(self, @selector(testExchangeMethodAfter));
+    //self是类对象,testExchangeClassMethod是类方法，查询类方法需要在元类中查询，该方法多了层cls->getMeta()
+    Method classMethod = class_getClassMethod(self, @selector(testExchangeClassMethod));
+    Method classMethodAfter = class_getClassMethod(self, @selector(testExchangeClassMethodAfter));
     method_exchangeImplementations(classMethod, classMethodAfter);
 }
 
-- (void)testExchangeMethod{
+- (void)testExchangeInstanceMethod{
     NSLog(@"实例方法交换前");
 }
 
-- (void)testExchangeMethodAfter{
+- (void)testExchangeInstanceMethodAfter{
     NSLog(@"实例方法交换后");
 }
 
-+ (void)testExchangeMethod{
++ (void)testExchangeClassMethod{
     NSLog(@"类方法交换前");
 }
 
-+ (void)testExchangeMethodAfter{
++ (void)testExchangeClassMethodAfter{
     NSLog(@"类方法交换后");
 }
 
