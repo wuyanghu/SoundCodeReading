@@ -118,6 +118,7 @@
     Method classMethod = class_getClassMethod(self, @selector(testExchangeClassMethod));
     Method classMethodAfter = class_getClassMethod(self, @selector(testExchangeClassMethodAfter));
     method_exchangeImplementations(classMethod, classMethodAfter);
+//    method_exchangeImplementations(classMethod, classMethodAfter);二次交换测试
 }
 
 - (void)testExchangeInstanceMethod{
