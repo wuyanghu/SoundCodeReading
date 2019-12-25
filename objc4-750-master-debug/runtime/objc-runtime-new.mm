@@ -5099,7 +5099,7 @@ IMP lookUpImpOrForward(Class cls, SEL sel, id inst,
     // No implementation found, and method resolver didn't help. 
     // Use forwarding.
     //即没有实现,resolver也不能解决时
-    imp = (IMP)_objc_msgForward_impcache;
+    imp = (IMP)_objc_msgForward_impcache;//快速消息转发
     cache_fill(cls, sel, imp, inst);
 
  done:
@@ -6664,8 +6664,8 @@ _class_createInstanceFromZone(Class cls, size_t extraBytes, void *zone,
     bool hasCxxCtor = cls->hasCxxCtor();
     bool hasCxxDtor = cls->hasCxxDtor();
     bool fast = cls->canAllocNonpointer();
-
-    size_t size = cls->instanceSize(extraBytes);//最小16字节
+    //1MB=1024kb=1024*1024bytes:1MB可以存放指针65536个
+    size_t size = cls->instanceSize(extraBytes);//最小16bytes
     if (outAllocatedSize) *outAllocatedSize = size;
 
     id obj;

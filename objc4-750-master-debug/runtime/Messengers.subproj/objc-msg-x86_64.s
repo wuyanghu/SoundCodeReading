@@ -1119,11 +1119,12 @@ LCacheMiss:
 *
 * id _objc_msgForward(id self, SEL _cmd,...);
 *
+ objc_msgForward和_objc_msgForward_stret是诸如method_getImplementation（）之类的东西返回的可在外部调用的函数。
 * _objc_msgForward and _objc_msgForward_stret are the externally-callable
 *   functions returned by things like method_getImplementation().
 * _objc_msgForward_impcache is the function pointer actually stored in
-*   method caches.
-*
+*   method caches.（_objc_msgForward_impcache是实际存储在方法缓存中的函数指针。）
+
 ********************************************************************/
 
 	STATIC_ENTRY __objc_msgForward_impcache
@@ -1137,7 +1138,7 @@ LCacheMiss:
 
 	END_ENTRY __objc_msgForward_impcache
 	
-	
+////快速消息转发:forwardingTargetForSelector
 	ENTRY __objc_msgForward
 	// Non-stret version
 
