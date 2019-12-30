@@ -14,7 +14,7 @@
 - (NSArray *)mas_makeConstraints:(void(^)(MASConstraintMaker *))block {
     self.translatesAutoresizingMaskIntoConstraints = NO;
     MASConstraintMaker *constraintMaker = [[MASConstraintMaker alloc] initWithView:self];
-    block(constraintMaker);
+    block(constraintMaker);//回调，给用户自定义属性，自动添加到数组中
     return [constraintMaker install];
 }
 

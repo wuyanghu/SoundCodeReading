@@ -1907,6 +1907,11 @@ static Class realizeClass(Class cls)
     if (cls->isRealized()) return cls;
     assert(cls == remapClass(cls));
 
+    /////测试数据
+    if(strcmp(class_getName(cls),"Person")==0){
+        printf("realizeClass 类名 %s.\n",class_getName(cls));
+    }
+    //////
     // fixme verify class is not in an un-dlopened part of the shared cache?
 
     ro = (const class_ro_t *)cls->data();
