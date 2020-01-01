@@ -766,16 +766,17 @@ static CFRunLoopModeRef __CFRunLoopFindMode(CFRunLoopRef rl, CFStringRef modeNam
     _CFRuntimeSetInstanceTypeIDAndIsa(&srlm, __kCFRunLoopModeTypeID);
     srlm._name = modeName;
     rlm = (CFRunLoopModeRef)CFSetGetValue(rl->_modes, &srlm);
-    if (NULL != rlm) {
-	__CFRunLoopModeLock(rlm);
-	return rlm;
+    if (NULL != rlm) {//找到即返回
+        __CFRunLoopModeLock(rlm);
+        return rlm;
     }
-    if (!create) {
-	return NULL;
+    if (!create) {//不创建，返回
+        return NULL;
     }
+    //下面创建runloop
     rlm = (CFRunLoopModeRef)_CFRuntimeCreateInstance(kCFAllocatorSystemDefault, __kCFRunLoopModeTypeID, sizeof(struct __CFRunLoopMode) - sizeof(CFRuntimeBase), NULL);
     if (NULL == rlm) {
-	return NULL;
+        return NULL;
     }
     __CFRunLoopLockInit(&rlm->_lock);
     rlm->_name = CFStringCreateCopy(kCFAllocatorSystemDefault, modeName);
@@ -832,6 +833,7 @@ static CFRunLoopModeRef __CFRunLoopFindMode(CFRunLoopRef rl, CFStringRef modeNam
 
 
 // expects rl and rlm locked
+//检查CFRunLoopRef是否为空,commonModes是否包含name,sources0、sources1、timers是否为空，
 static Boolean __CFRunLoopModeIsEmpty(CFRunLoopRef rl, CFRunLoopModeRef rlm, CFRunLoopModeRef previousMode) {
     CHECK_FOR_FORK();
     if (NULL == rlm) return true;
@@ -844,7 +846,7 @@ static Boolean __CFRunLoopModeIsEmpty(CFRunLoopRef rl, CFRunLoopModeRef rlm, CFR
     if (NULL != rlm->_sources1 && 0 < CFSetGetCount(rlm->_sources1)) return false;
     if (NULL != rlm->_timers && 0 < CFArrayGetCount(rlm->_timers)) return false;
     struct _block_item *item = rl->_blocks_head;
-    while (item) {
+    while (item) {//这是啥？
         struct _block_item *curr = item;
         item = item->_next;
         Boolean doit = false;
@@ -1696,17 +1698,21 @@ static Boolean __CFRunLoopDoBlocks(CFRunLoopRef rl, CFRunLoopModeRef rlm) { // C
     return did;
 }
 
-/* rl is locked, rlm is locked on entrance and exit */
+/*
+ rl is locked, rlm is locked on entrance and exit
+ CFRunLoopActivity activity：runloop的六种状态
+ 问题：没找到存储在哪
+ */
 static void __CFRunLoopDoObservers() __attribute__((noinline));
 static void __CFRunLoopDoObservers(CFRunLoopRef rl, CFRunLoopModeRef rlm, CFRunLoopActivity activity) {	/* DOES CALLOUT */
     CHECK_FOR_FORK();
 
-    CFIndex cnt = rlm->_observers ? CFArrayGetCount(rlm->_observers) : 0;
+    CFIndex cnt = rlm->_observers ? CFArrayGetCount(rlm->_observers) : 0;//获取model观察者的count
     if (cnt < 1) return;
 
     /* Fire the observers */
     STACK_BUFFER_DECL(CFRunLoopObserverRef, buffer, (cnt <= 1024) ? cnt : 1);
-    CFRunLoopObserverRef *collectedObservers = (cnt <= 1024) ? buffer : (CFRunLoopObserverRef *)malloc(cnt * sizeof(CFRunLoopObserverRef));
+    CFRunLoopObserverRef *collectedObservers = (cnt <= 1024) ? buffer : (CFRunLoopObserverRef *)malloc(cnt * sizeof(CFRunLoopObserverRef));//cnt<1024取缓存，否则分配cnt大小内存
     CFIndex obs_cnt = 0;
     for (CFIndex idx = 0; idx < cnt; idx++) {
         CFRunLoopObserverRef rlo = (CFRunLoopObserverRef)CFArrayGetValueAtIndex(rlm->_observers, idx);
@@ -2360,7 +2366,7 @@ static void __CFRunLoopTimeout(void *arg) {
     // The interval is DISPATCH_TIME_FOREVER, so this won't fire again
 }
 
-#pragma mark - 内部函数
+#pragma mark - runloop实现
 /* rl, rlm are locked on entrance and exit */
 static int32_t __CFRunLoopRun(CFRunLoopRef rl, CFRunLoopModeRef rlm, CFTimeInterval seconds, Boolean stopAfterHandle, CFRunLoopModeRef previousMode) {
     uint64_t startTSR = mach_absolute_time();
@@ -2393,14 +2399,14 @@ static int32_t __CFRunLoopRun(CFRunLoopRef rl, CFRunLoopModeRef rlm, CFTimeInter
         seconds = 0.0;
         timeout_context->termTSR = 0ULL;
     } else if (seconds <= TIMER_INTERVAL_LIMIT) {
-	dispatch_queue_t queue = pthread_main_np() ? __CFDispatchQueueGetGenericMatchingMain() : __CFDispatchQueueGetGenericBackground();
-	timeout_timer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, queue);
-        dispatch_retain(timeout_timer);
-	timeout_context->ds = timeout_timer;
-	timeout_context->rl = (CFRunLoopRef)CFRetain(rl);
-	timeout_context->termTSR = startTSR + __CFTimeIntervalToTSR(seconds);
-	dispatch_set_context(timeout_timer, timeout_context); // source gets ownership of context
-	dispatch_source_set_event_handler_f(timeout_timer, __CFRunLoopTimeout);
+        dispatch_queue_t queue = pthread_main_np() ? __CFDispatchQueueGetGenericMatchingMain() : __CFDispatchQueueGetGenericBackground();
+        timeout_timer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, queue);
+            dispatch_retain(timeout_timer);
+        timeout_context->ds = timeout_timer;
+        timeout_context->rl = (CFRunLoopRef)CFRetain(rl);
+        timeout_context->termTSR = startTSR + __CFTimeIntervalToTSR(seconds);
+        dispatch_set_context(timeout_timer, timeout_context); // source gets ownership of context
+        dispatch_source_set_event_handler_f(timeout_timer, __CFRunLoopTimeout);
         dispatch_source_set_cancel_handler_f(timeout_timer, __CFRunLoopTimeoutCancel);
         uint64_t ns_at = (uint64_t)((__CFTSRToTimeInterval(startTSR) + seconds) * 1000000000ULL);
         dispatch_source_set_timer(timeout_timer, dispatch_time(1, ns_at), DISPATCH_TIME_FOREVER, 1000ULL);
@@ -2412,6 +2418,7 @@ static int32_t __CFRunLoopRun(CFRunLoopRef rl, CFRunLoopModeRef rlm, CFTimeInter
 
     Boolean didDispatchPortLastTime = true;
     int32_t retVal = 0;
+    //这个do...while runloop运行的真谛
     do {
 #if DEPLOYMENT_TARGET_MACOSX || DEPLOYMENT_TARGET_EMBEDDED || DEPLOYMENT_TARGET_EMBEDDED_MINI
         voucher_mach_msg_state_t voucherState = VOUCHER_MACH_MSG_STATE_UNCHANGED;
@@ -2427,11 +2434,11 @@ static int32_t __CFRunLoopRun(CFRunLoopRef rl, CFRunLoopModeRef rlm, CFTimeInter
 #endif
 	__CFPortSet waitSet = rlm->_portSet;
 
-        __CFRunLoopUnsetIgnoreWakeUps(rl);
-        // 2. 通知 Observers: RunLoop 即将触发 Timer 回调。
-        if (rlm->_observerMask & kCFRunLoopBeforeTimers) __CFRunLoopDoObservers(rl, rlm, kCFRunLoopBeforeTimers);
-        // 3. 通知 Observers: RunLoop 即将触发 Source0 (非port) 回调。
-        if (rlm->_observerMask & kCFRunLoopBeforeSources) __CFRunLoopDoObservers(rl, rlm, kCFRunLoopBeforeSources);
+    __CFRunLoopUnsetIgnoreWakeUps(rl);
+    // 2. 通知 Observers: RunLoop 即将触发 Timer 回调。
+    if (rlm->_observerMask & kCFRunLoopBeforeTimers) __CFRunLoopDoObservers(rl, rlm, kCFRunLoopBeforeTimers);
+    // 3. 通知 Observers: RunLoop 即将触发 Source0 (非port) 回调。
+    if (rlm->_observerMask & kCFRunLoopBeforeSources) __CFRunLoopDoObservers(rl, rlm,kCFRunLoopBeforeSources);
         // 执行被加入的block
 	__CFRunLoopDoBlocks(rl, rlm);
 
@@ -2691,17 +2698,19 @@ static int32_t __CFRunLoopRun(CFRunLoopRef rl, CFRunLoopModeRef rlm, CFTimeInter
     return retVal;
 }
 
-#pragma mark - RunLoop的实现
-
+#pragma mark - RunLoop入口
+/*
+ CFRunLoopRef rl:CFRunLoop对象
+ */
 SInt32 CFRunLoopRunSpecific(CFRunLoopRef rl, CFStringRef modeName, CFTimeInterval seconds, Boolean returnAfterSourceHandled) {     /* DOES CALLOUT */
     CHECK_FOR_FORK();
     if (__CFRunLoopIsDeallocating(rl)) return kCFRunLoopRunFinished;
     __CFRunLoopLock(rl);
-    // 首先根据modeName找到对应mode
-    CFRunLoopModeRef currentMode = __CFRunLoopFindMode(rl, modeName, false);
+    
+    CFRunLoopModeRef currentMode = __CFRunLoopFindMode(rl, modeName, false);// 在rl中找到modeName正在运行的model
     // 如果mode里没有source/timer/observer, 直接返回。
     if (NULL == currentMode || __CFRunLoopModeIsEmpty(rl, currentMode, rl->_currentMode)) {
-        Boolean did = false;
+        Boolean did = false;//?did干啥的，写死的局部变量？
         if (currentMode) __CFRunLoopModeUnlock(currentMode);
         __CFRunLoopUnlock(rl);
         return did ? kCFRunLoopRunHandledSource : kCFRunLoopRunFinished;
