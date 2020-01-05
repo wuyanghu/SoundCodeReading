@@ -490,7 +490,7 @@ struct locstamped_category_list_t {
 // class or superclass has .cxx_construct implementation
 #define RW_HAS_CXX_CTOR       (1<<18)
 // class or superclass has .cxx_destruct implementation
-#define RW_HAS_CXX_DTOR       (1<<17)
+#define RW_HAS_CXX_DTOR       (1<<17)//C++标志位
 // class or superclass has default alloc/allocWithZone: implementation
 // Note this is is stored in the metaclass.
 #define RW_HAS_DEFAULT_AWZ    (1<<16)

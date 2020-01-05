@@ -428,7 +428,7 @@ inline void
 objc_object::rootDealloc()
 {
     if (isTaggedPointer()) return;  // fixme necessary?
-
+    //开启了指针优化、没有弱引用计数、没有关联对象、没有C++、没有sidetabled的引用计数
     if (fastpath(isa.nonpointer  &&  
                  !isa.weakly_referenced  &&  
                  !isa.has_assoc  &&  
@@ -439,7 +439,7 @@ objc_object::rootDealloc()
         free(this);
     } 
     else {
-        object_dispose((id)this);
+        object_dispose((id)this);//弱引用计数、关联对象、C++、或开启了sidetabled的引用计数
     }
 }
 

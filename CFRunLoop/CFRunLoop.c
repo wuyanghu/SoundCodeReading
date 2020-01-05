@@ -2086,6 +2086,7 @@ static void __CFRepositionTimerInMode(CFRunLoopModeRef rlm, CFRunLoopTimerRef rl
     if (isInArray) CFRelease(rlt);
 }
 
+#pragma mark - 处理timers
 
 // mode and rl are locked on entry and exit
 static Boolean __CFRunLoopDoTimer(CFRunLoopRef rl, CFRunLoopModeRef rlm, CFRunLoopTimerRef rlt) {	/* DOES CALLOUT */
@@ -2106,38 +2107,38 @@ static Boolean __CFRunLoopDoTimer(CFRunLoopRef rl, CFRunLoopModeRef rlm, CFRunLo
             context_info = rlt->_context.info;
         }
         Boolean doInvalidate = (0.0 == rlt->_interval);
-	__CFRunLoopTimerSetFiring(rlt);
+        __CFRunLoopTimerSetFiring(rlt);
         // Just in case the next timer has exactly the same deadlines as this one, we reset these values so that the arm next timer code can correctly find the next timer in the list and arm the underlying timer.
+//        以防万一下一个计时器与该计时器的截止日期完全相同，我们重置这些值，以便启用下一个计时器代码可以正确地找到列表中的下一个计时器并启用基础计时器。
         rlm->_timerSoftDeadline = UINT64_MAX;
         rlm->_timerHardDeadline = UINT64_MAX;
         __CFRunLoopTimerUnlock(rlt);
-	__CFRunLoopTimerFireTSRLock();
-	oldFireTSR = rlt->_fireTSR;
-	__CFRunLoopTimerFireTSRUnlock();
+        __CFRunLoopTimerFireTSRLock();
+        oldFireTSR = rlt->_fireTSR;
+        __CFRunLoopTimerFireTSRUnlock();
 
-        __CFArmNextTimerInMode(rlm, rl);
+            __CFArmNextTimerInMode(rlm, rl);
 
-	__CFRunLoopModeUnlock(rlm);
-	__CFRunLoopUnlock(rl);
-	__CFRUNLOOP_IS_CALLING_OUT_TO_A_TIMER_CALLBACK_FUNCTION__(rlt->_callout, rlt, context_info);
-	CHECK_FOR_FORK();
+        __CFRunLoopModeUnlock(rlm);
+        __CFRunLoopUnlock(rl);
+    __CFRUNLOOP_IS_CALLING_OUT_TO_A_TIMER_CALLBACK_FUNCTION__(rlt->_callout, rlt, context_info);//真正处理timer回调事件
+        CHECK_FOR_FORK();
         if (doInvalidate) {
             CFRunLoopTimerInvalidate(rlt);      /* DOES CALLOUT */
         }
         if (context_release) {
             context_release(context_info);
         }
-	__CFRunLoopLock(rl);
-	__CFRunLoopModeLock(rlm);
+        __CFRunLoopLock(rl);
+        __CFRunLoopModeLock(rlm);
         __CFRunLoopTimerLock(rlt);
-	timerHandled = true;
-	__CFRunLoopTimerUnsetFiring(rlt);
+        timerHandled = true;
+        __CFRunLoopTimerUnsetFiring(rlt);
     }
+    
     if (__CFIsValid(rlt) && timerHandled) {
-        /* This is just a little bit tricky: we want to support calling
-         * CFRunLoopTimerSetNextFireDate() from within the callout and
-         * honor that new time here if it is a later date, otherwise
-         * it is completely ignored. */
+        /* This is just a little bit tricky: we want to support calling CFRunLoopTimerSetNextFireDate() from within the callout and honor that new time here if it is a later date, otherwise it is completely ignored.
+         这有点棘手：我们希望支持从标注内调用CFRunLoopTimerSetNextFireDate（），并在此保留新日期（如果是较晚的日期），否则将被完全忽略。*/
         if (oldFireTSR < rlt->_fireTSR) {
             /* Next fire TSR was set, and set to a date after the previous
             * fire date, so we honor it. */
@@ -2149,13 +2150,13 @@ static Boolean __CFRunLoopDoTimer(CFRunLoopRef rl, CFRunLoopModeRef rlm, CFRunLo
             // timer instead of whatever was chosen.
             __CFArmNextTimerInMode(rlm, rl);
         } else {
-	    uint64_t nextFireTSR = 0LL;
+            uint64_t nextFireTSR = 0LL;
             uint64_t intervalTSR = 0LL;
             if (rlt->_interval <= 0.0) {
             } else if (TIMER_INTERVAL_LIMIT < rlt->_interval) {
-        	intervalTSR = __CFTimeIntervalToTSR(TIMER_INTERVAL_LIMIT);
+                intervalTSR = __CFTimeIntervalToTSR(TIMER_INTERVAL_LIMIT);
             } else {
-        	intervalTSR = __CFTimeIntervalToTSR(rlt->_interval);
+                intervalTSR = __CFTimeIntervalToTSR(rlt->_interval);
             }
             if (LLONG_MAX - intervalTSR <= oldFireTSR) {
                 nextFireTSR = LLONG_MAX;
@@ -2174,42 +2175,42 @@ static Boolean __CFRunLoopDoTimer(CFRunLoopRef rl, CFRunLoopModeRef rlm, CFRunLo
             CFRunLoopRef rlt_rl = rlt->_runLoop;
             if (rlt_rl) {
                 CFRetain(rlt_rl);
-		CFIndex cnt = CFSetGetCount(rlt->_rlModes);
-		STACK_BUFFER_DECL(CFTypeRef, modes, cnt);
-		CFSetGetValues(rlt->_rlModes, (const void **)modes);
-		// To avoid A->B, B->A lock ordering issues when coming up
-		// towards the run loop from a source, the timer has to be
-		// unlocked, which means we have to protect from object
-		// invalidation, although that's somewhat expensive.
-		for (CFIndex idx = 0; idx < cnt; idx++) {
-		    CFRetain(modes[idx]);
-		}
-		__CFRunLoopTimerUnlock(rlt);
-		for (CFIndex idx = 0; idx < cnt; idx++) {
-		    CFStringRef name = (CFStringRef)modes[idx];
-		    modes[idx] = (CFTypeRef)__CFRunLoopFindMode(rlt_rl, name, false);
-		    CFRelease(name);
-		}
-		__CFRunLoopTimerFireTSRLock();
-		rlt->_fireTSR = nextFireTSR;
-                rlt->_nextFireDate = CFAbsoluteTimeGetCurrent() + __CFTimeIntervalUntilTSR(nextFireTSR);
-		for (CFIndex idx = 0; idx < cnt; idx++) {
-		    CFRunLoopModeRef rlm = (CFRunLoopModeRef)modes[idx];
-		    if (rlm) {
+                CFIndex cnt = CFSetGetCount(rlt->_rlModes);
+                STACK_BUFFER_DECL(CFTypeRef, modes, cnt);
+                CFSetGetValues(rlt->_rlModes, (const void **)modes);
+                // To avoid A->B, B->A lock ordering issues when coming up
+                // towards the run loop from a source, the timer has to be
+                // unlocked, which means we have to protect from object
+                // invalidation, although that's somewhat expensive.
+                for (CFIndex idx = 0; idx < cnt; idx++) {
+                    CFRetain(modes[idx]);
+                }
+                __CFRunLoopTimerUnlock(rlt);
+                for (CFIndex idx = 0; idx < cnt; idx++) {
+                    CFStringRef name = (CFStringRef)modes[idx];
+                    modes[idx] = (CFTypeRef)__CFRunLoopFindMode(rlt_rl, name, false);
+                    CFRelease(name);
+                }
+                __CFRunLoopTimerFireTSRLock();
+                rlt->_fireTSR = nextFireTSR;
+                        rlt->_nextFireDate = CFAbsoluteTimeGetCurrent() + __CFTimeIntervalUntilTSR(nextFireTSR);
+                for (CFIndex idx = 0; idx < cnt; idx++) {
+                    CFRunLoopModeRef rlm = (CFRunLoopModeRef)modes[idx];
+                    if (rlm) {
                         __CFRepositionTimerInMode(rlm, rlt, true);
-		    }
-		}
-		__CFRunLoopTimerFireTSRUnlock();
-		for (CFIndex idx = 0; idx < cnt; idx++) {
-		    __CFRunLoopModeUnlock((CFRunLoopModeRef)modes[idx]);
-		}
-		CFRelease(rlt_rl);
+                    }
+                }
+                __CFRunLoopTimerFireTSRUnlock();
+                for (CFIndex idx = 0; idx < cnt; idx++) {
+                __CFRunLoopModeUnlock((CFRunLoopModeRef)modes[idx]);
+                }
+                CFRelease(rlt_rl);
 	    } else {
-		__CFRunLoopTimerUnlock(rlt);
-		__CFRunLoopTimerFireTSRLock();
-		rlt->_fireTSR = nextFireTSR;
-                rlt->_nextFireDate = CFAbsoluteTimeGetCurrent() + __CFTimeIntervalUntilTSR(nextFireTSR);
-		__CFRunLoopTimerFireTSRUnlock();
+            __CFRunLoopTimerUnlock(rlt);
+            __CFRunLoopTimerFireTSRLock();
+            rlt->_fireTSR = nextFireTSR;
+                    rlt->_nextFireDate = CFAbsoluteTimeGetCurrent() + __CFTimeIntervalUntilTSR(nextFireTSR);
+            __CFRunLoopTimerFireTSRUnlock();
             }
         }
     } else {
@@ -2219,11 +2220,11 @@ static Boolean __CFRunLoopDoTimer(CFRunLoopRef rl, CFRunLoopModeRef rlm, CFRunLo
     return timerHandled;
 }
 
-
+//从rlm->_timers获取，加入到timers数组，逐个处理__CFRunLoopDoTimer
 // rl and rlm are locked on entry and exit
 static Boolean __CFRunLoopDoTimers(CFRunLoopRef rl, CFRunLoopModeRef rlm, uint64_t limitTSR) {	/* DOES CALLOUT */
     Boolean timerHandled = false;
-    CFMutableArrayRef timers = NULL;
+    CFMutableArrayRef timers = NULL;//取出rlm->_timers到数组里
     for (CFIndex idx = 0, cnt = rlm->_timers ? CFArrayGetCount(rlm->_timers) : 0; idx < cnt; idx++) {
         CFRunLoopTimerRef rlt = (CFRunLoopTimerRef)CFArrayGetValueAtIndex(rlm->_timers, idx);
         
@@ -2237,13 +2238,14 @@ static Boolean __CFRunLoopDoTimers(CFRunLoopRef rl, CFRunLoopModeRef rlm, uint64
     
     for (CFIndex idx = 0, cnt = timers ? CFArrayGetCount(timers) : 0; idx < cnt; idx++) {
         CFRunLoopTimerRef rlt = (CFRunLoopTimerRef)CFArrayGetValueAtIndex(timers, idx);
-        Boolean did = __CFRunLoopDoTimer(rl, rlm, rlt);
+        Boolean did = __CFRunLoopDoTimer(rl, rlm, rlt);//处理timer事件
         timerHandled = timerHandled || did;
     }
     if (timers) CFRelease(timers);
     return timerHandled;
 }
 
+#pragma mark --
 
 CF_EXPORT Boolean _CFRunLoopFinished(CFRunLoopRef rl, CFStringRef modeName) {
     CHECK_FOR_FORK();
@@ -2633,7 +2635,7 @@ static int32_t __CFRunLoopRun(CFRunLoopRef rl, CFRunLoopModeRef rlm, CFTimeInter
         //如果是定时器事件
         else if (modeQueuePort != MACH_PORT_NULL && livePort == modeQueuePort) {
             CFRUNLOOP_WAKEUP_FOR_TIMER();
-            //9.1 处理timer事件
+            //9.1 批量处理timer事件
             if (!__CFRunLoopDoTimers(rl, rlm, mach_absolute_time())) {
                 // Re-arm the next timer, because we apparently fired early
                 __CFArmNextTimerInMode(rlm, rl);
@@ -2663,7 +2665,7 @@ static int32_t __CFRunLoopRun(CFRunLoopRef rl, CFRunLoopModeRef rlm, CFTimeInter
             void *msg = 0;
 #endif
             // 9.2 如果有dispatch到main_queue的block，执行block。
-            __CFRUNLOOP_IS_SERVICING_THE_MAIN_DISPATCH_QUEUE__(msg);
+         __CFRUNLOOP_IS_SERVICING_THE_MAIN_DISPATCH_QUEUE__(msg);
             _CFSetTSD(__CFTSDKeyIsInGCDMainQ, (void *)0, NULL);
             __CFRunLoopLock(rl);
             __CFRunLoopModeLock(rlm);
@@ -2679,12 +2681,12 @@ static int32_t __CFRunLoopRun(CFRunLoopRef rl, CFRunLoopModeRef rlm, CFTimeInter
             CFRunLoopSourceRef rls = __CFRunLoopModeFindSourceForMachPort(rl, rlm, livePort);
             if (rls) {
     #if DEPLOYMENT_TARGET_MACOSX || DEPLOYMENT_TARGET_EMBEDDED || DEPLOYMENT_TARGET_EMBEDDED_MINI
-            mach_msg_header_t *reply = NULL;
-            sourceHandledThisLoop = __CFRunLoopDoSource1(rl, rlm, rls, msg, msg->msgh_size, &reply) || sourceHandledThisLoop;
-            if (NULL != reply) {
-                (void)mach_msg(reply, MACH_SEND_MSG, reply->msgh_size, 0, MACH_PORT_NULL, 0, MACH_PORT_NULL);
-                CFAllocatorDeallocate(kCFAllocatorSystemDefault, reply);
-            }
+                    mach_msg_header_t *reply = NULL;
+                    sourceHandledThisLoop = __CFRunLoopDoSource1(rl, rlm, rls, msg, msg->msgh_size, &reply) || sourceHandledThisLoop;
+                    if (NULL != reply) {
+                        (void)mach_msg(reply, MACH_SEND_MSG, reply->msgh_size, 0, MACH_PORT_NULL, 0, MACH_PORT_NULL);
+                        CFAllocatorDeallocate(kCFAllocatorSystemDefault, reply);
+                    }
     #elif DEPLOYMENT_TARGET_WINDOWS
                     sourceHandledThisLoop = __CFRunLoopDoSource1(rl, rlm, rls) || sourceHandledThisLoop;
     #endif
@@ -2699,7 +2701,7 @@ static int32_t __CFRunLoopRun(CFRunLoopRef rl, CFRunLoopModeRef rlm, CFTimeInter
 #endif
         // 执行加入到Loop的block
         __CFRunLoopDoBlocks(rl, rlm);
-        
+        //对结果的检查
         if (sourceHandledThisLoop && stopAfterHandle) {
             retVal = kCFRunLoopRunHandledSource;// 进入loop时参数说处理完事件就返回。
         }else if (timeout_context->termTSR < mach_absolute_time()) {
@@ -2748,7 +2750,7 @@ SInt32 CFRunLoopRunSpecific(CFRunLoopRef rl, CFStringRef modeName, CFTimeInterva
         __CFRunLoopUnlock(rl);
         return did ? kCFRunLoopRunHandledSource : kCFRunLoopRunFinished;
     }
-    volatile _per_run_data *previousPerRun = __CFRunLoopPushPerRunData(rl);
+    volatile _per_run_data *previousPerRun = __CFRunLoopPushPerRunData(rl);//入栈
     CFRunLoopModeRef previousMode = rl->_currentMode;
     rl->_currentMode = currentMode;
     int32_t result = kCFRunLoopRunFinished;
@@ -2760,7 +2762,7 @@ SInt32 CFRunLoopRunSpecific(CFRunLoopRef rl, CFStringRef modeName, CFTimeInterva
 	if (currentMode->_observerMask & kCFRunLoopExit ) __CFRunLoopDoObservers(rl, currentMode, kCFRunLoopExit);//退出
 
     __CFRunLoopModeUnlock(currentMode);
-    __CFRunLoopPopPerRunData(rl, previousPerRun);
+    __CFRunLoopPopPerRunData(rl, previousPerRun);//出栈
 	rl->_currentMode = previousMode;
     __CFRunLoopUnlock(rl);
     return result;

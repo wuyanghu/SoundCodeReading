@@ -335,7 +335,7 @@ void _object_remove_assocations(id object) {
             }
             // remove the secondary table.
             delete refs;
-            associations.erase(i);
+            associations.erase(i);//删除
         }
     }
     // the calls to releaseValue() happen outside of the lock.

@@ -29,13 +29,13 @@ int main(int argc, const char * argv[]) {
 //        id newObject = [[newClass alloc]init];
 //        NSLog(@"%@",newObject);
         
-        methodInit();
-        printMethodNamesOfClass([Person class]);
-        associated();
-        strong();
-        weak();
-        
-        messageSend();
+//        methodInit();
+//        printMethodNamesOfClass([Person class]);
+//        associated();
+//        strong();
+//        weak();
+//        
+//        messageSend();
     }
     return 0;
 }

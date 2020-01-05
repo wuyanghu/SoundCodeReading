@@ -182,7 +182,7 @@ void remove_category_from_loadable_list(Category cat)
 * call_class_loads
 * Call all pending class +load methods.
 * If new classes become loadable, +load is NOT called for them.
-*
+* 仅调用，loadable_classes在准备时就已加载完成
 * Called only by call_load_methods().
 **********************************************************************/
 static void call_class_loads(void)
@@ -202,7 +202,7 @@ static void call_class_loads(void)
         Class cls = classes[i].cls;//对应的cls
         load_method_t load_method = (load_method_t)classes[i].method;//方法对应的IMP
         if (!cls) continue; 
-
+        
         if (PrintLoading) {
             _objc_inform("LOAD: +[%s load]\n", cls->nameForLogging());
         }

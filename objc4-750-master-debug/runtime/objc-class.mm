@@ -447,7 +447,7 @@ static void object_cxxDestructFromClass(id obj, Class cls)
                 _objc_inform("CXX: calling C++ destructors for class %s", 
                              cls->nameForLogging());
             }
-            (*dtor)(obj);
+            (*dtor)(obj);//调回.cxx_destruct的释放方法,释放必须交给用户
         }
     }
 }

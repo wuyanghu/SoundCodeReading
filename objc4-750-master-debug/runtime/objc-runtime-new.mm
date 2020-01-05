@@ -1907,11 +1907,6 @@ static Class realizeClass(Class cls)
     if (cls->isRealized()) return cls;
     assert(cls == remapClass(cls));
 
-    /////测试数据
-    if(strcmp(class_getName(cls),"Person")==0){
-        printf("realizeClass 类名 %s.\n",class_getName(cls));
-    }
-    //////
     // fixme verify class is not in an un-dlopened part of the shared cache?
 
     ro = (const class_ro_t *)cls->data();
@@ -4971,7 +4966,6 @@ IMP lookUpImpOrForward(Class cls, SEL sel, id inst,
     bool triedResolver = NO;
     /////测试数据
     if(strcmp(class_getName(cls),"Person")==0){
-        printf("lookUpImpOrForward 类名 %s.\n",class_getName(cls));
         if (strcmp(sel_getName(sel),"run")==0) {
             printf("lookUpImpOrForward 方法名 %s.\n",sel_getName(sel));
         }
@@ -6804,8 +6798,8 @@ void *objc_destructInstance(id obj)
 {
     if (obj) {
         // Read all of the flags at once for performance.
-        bool cxx = obj->hasCxxDtor();
-        bool assoc = obj->hasAssociatedObjects();
+        bool cxx = obj->hasCxxDtor();//C++
+        bool assoc = obj->hasAssociatedObjects();//关联对象
 
         // This order is important.
         if (cxx) object_cxxDestruct(obj);// 调用C++析构函数
