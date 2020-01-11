@@ -285,7 +285,7 @@ CF_INLINE __CFPortSet __CFPortSetAllocate(void) {
     if (KERN_SUCCESS != ret) { __THE_SYSTEM_HAS_NO_PORT_SETS_AVAILABLE__(ret); }
     return (KERN_SUCCESS == ret) ? result : CFPORT_NULL;
 }
-
+//内核了解下?
 CF_INLINE kern_return_t __CFPortSetInsert(__CFPort port, __CFPortSet portSet) {
     if (MACH_PORT_NULL == port) {
         return -1;
@@ -1670,7 +1670,8 @@ static void __CFRUNLOOP_IS_CALLING_OUT_TO_A_BLOCK__(void (^block)(void)) {
 
 #pragma mark -------
 
-//链表
+//while循环执行rl的block任务
+//遍历rl中的model,与curModel _name相同时，执行block任务
 static Boolean __CFRunLoopDoBlocks(CFRunLoopRef rl, CFRunLoopModeRef rlm) { // Call with rl and rlm locked
     if (!rl->_blocks_head) return false;
     if (!rlm || !rlm->_name) return false;
@@ -1685,7 +1686,7 @@ static Boolean __CFRunLoopDoBlocks(CFRunLoopRef rl, CFRunLoopModeRef rlm) { // C
     __CFRunLoopUnlock(rl);
     struct _block_item *prev = NULL;
     struct _block_item *item = head;//从头指针开始遍历
-    while (item) {
+    while (item) {//遍历链表
         struct _block_item *curr = item;
         item = item->_next;
         Boolean doit = false;
@@ -1699,10 +1700,11 @@ static Boolean __CFRunLoopDoBlocks(CFRunLoopRef rl, CFRunLoopModeRef rlm) { // C
             if (prev) prev->_next = item;
             if (curr == head) head = item;
             if (curr == tail) tail = prev;
-            void (^block)(void) = curr->_block;
+            void (^block)(void) = curr->_block;//执行curr的block任务
             CFRelease(curr->_mode);
             free(curr);
             if (doit) {
+                //执行block任务
                 __CFRUNLOOP_IS_CALLING_OUT_TO_A_BLOCK__(block);
                 did = true;
             }
@@ -1711,7 +1713,7 @@ static Boolean __CFRunLoopDoBlocks(CFRunLoopRef rl, CFRunLoopModeRef rlm) { // C
     }
     __CFRunLoopLock(rl);
     __CFRunLoopModeLock(rlm);
-    if (head) {
+    if (head) {//环形指针?
         tail->_next = rl->_blocks_head;
         rl->_blocks_head = head;
         if (!rl->_blocks_tail) rl->_blocks_tail = tail;
@@ -2477,7 +2479,7 @@ static int32_t __CFRunLoopRun(CFRunLoopRef rl, CFRunLoopModeRef rlm, CFTimeInter
     // 3. 通知 Observers: RunLoop 即将触发 Source0 (非port) 回调。
     if (rlm->_observerMask & kCFRunLoopBeforeSources) __CFRunLoopDoObservers(rl, rlm,kCFRunLoopBeforeSources);
     // 执行被加入的block
-    __CFRunLoopDoBlocks(rl, rlm);//细节可再琢磨
+    __CFRunLoopDoBlocks(rl, rlm);
 
     //4.处理source0事件;有事件处理返回true，没有事件返回false
     Boolean sourceHandledThisLoop = __CFRunLoopDoSources0(rl, rlm, stopAfterHandle);
@@ -2492,8 +2494,16 @@ static int32_t __CFRunLoopRun(CFRunLoopRef rl, CFRunLoopModeRef rlm, CFTimeInter
     if (MACH_PORT_NULL != dispatchPort && !didDispatchPortLastTime) {
 #if DEPLOYMENT_TARGET_MACOSX || DEPLOYMENT_TARGET_EMBEDDED || DEPLOYMENT_TARGET_EMBEDDED_MINI
         msg = (mach_msg_header_t *)msg_buffer;//从缓冲区读取消息
-        //5.接收dispatchPort端口的消息，（接收source1事件）
-        if (__CFRunLoopServiceMachPort(dispatchPort, &msg, sizeof(msg_buffer), &livePort, 0, &voucherState, NULL)) {
+        /*
+         这个函数会睡眠线程
+         
+         */
+        if (__CFRunLoopServiceMachPort(dispatchPort,// 监听的端口
+                                       &msg,// 存放消息的地址
+                                       sizeof(msg_buffer),
+                                       &livePort,// 返回发送消息的端口
+                                       0,// 超时时间，这里为 0 表示不会睡眠
+                                       &voucherState, NULL)) {
             goto handle_msg;//如果接收到了消息的话，前往第9步开始处理msg
         }
 #elif DEPLOYMENT_TARGET_WINDOWS
@@ -2504,59 +2514,61 @@ static int32_t __CFRunLoopRun(CFRunLoopRef rl, CFRunLoopModeRef rlm, CFTimeInter
     }
 
     didDispatchPortLastTime = false;
-    // 通知 Observers: RunLoop 的线程即将进入休眠(sleep)。
-	if (!poll && (rlm->_observerMask & kCFRunLoopBeforeWaiting)) __CFRunLoopDoObservers(rl, rlm, kCFRunLoopBeforeWaiting);
-        
-        __CFRunLoopSetSleeping(rl);//睡眠,仅设置标志位?
-        __CFPortSetInsert(dispatchPort, waitSet);
-        
-        __CFRunLoopModeUnlock(rlm);
-        __CFRunLoopUnlock(rl);
 
-        CFAbsoluteTime sleepStart = poll ? 0.0 : CFAbsoluteTimeGetCurrent();
+    if (!poll && (rlm->_observerMask & kCFRunLoopBeforeWaiting)){
+        // 通知 Observers: RunLoop 的线程即将进入休眠(sleep)。
+        __CFRunLoopDoObservers(rl, rlm, kCFRunLoopBeforeWaiting);
+    }
+    
+    __CFRunLoopSetSleeping(rl);//睡眠,仅设置标志位?
+    __CFPortSetInsert(dispatchPort, waitSet);//内核了解下?
+    
+    __CFRunLoopModeUnlock(rlm);
+    __CFRunLoopUnlock(rl);
+
+    CFAbsoluteTime sleepStart = poll ? 0.0 : CFAbsoluteTimeGetCurrent();
 
 #if DEPLOYMENT_TARGET_MACOSX || DEPLOYMENT_TARGET_EMBEDDED || DEPLOYMENT_TARGET_EMBEDDED_MINI
     #if USE_DISPATCH_SOURCE_FOR_TIMERS
         //这里有个内循环，用于接收等待端口的消息
-        //进入此循环后，线程进入休眠，直到收到新消息才跳出该循环，继续执行run loop
-            do {
-                if (kCFUseCollectableAllocator) {
-                    // objc_clear_stack(0);
-                    // <rdar://problem/16393959>
-                    memset(msg_buffer, 0, sizeof(msg_buffer));
-                }
-                msg = (mach_msg_header_t *)msg_buffer;
-                //7.接收waitSet端口的消息
-                __CFRunLoopServiceMachPort(waitSet, &msg, sizeof(msg_buffer), &livePort, poll ? 0 : TIMEOUT_INFINITY, &voucherState, &voucherCopy);
-                
-                if (modeQueuePort != MACH_PORT_NULL && livePort == modeQueuePort) {
-                    // Drain the internal queue. If one of the callout blocks sets the timerFired flag, break out and service the timer.
-                    while (_dispatch_runloop_root_queue_perform_4CF(rlm->_queue));
-                    if (rlm->_timerFired) {
-                        // Leave livePort as the queue port, and service timers below
-                        rlm->_timerFired = false;
-                        break;
-                    } else {
-                        if (msg && msg != (mach_msg_header_t *)msg_buffer) free(msg);
-                    }
-                } else {
-                    // Go ahead and leave the inner loop.
-                    break;
-                }
-            } while (1);
-    #else
-            if (kCFUseCollectableAllocator) {
-                // objc_clear_stack(0);
-                // <rdar://problem/16393959>
-                memset(msg_buffer, 0, sizeof(msg_buffer));
+//进入此循环后，线程进入休眠，直到收到新消息才跳出该循环，继续执行run loop
+    do {
+        if (kCFUseCollectableAllocator) {
+            // 初始化
+            memset(msg_buffer, 0, sizeof(msg_buffer));
+        }
+        msg = (mach_msg_header_t *)msg_buffer;
+        //7.接收waitSet端口的消息
+        __CFRunLoopServiceMachPort(waitSet, &msg, sizeof(msg_buffer), &livePort, poll ? 0 : TIMEOUT_INFINITY, &voucherState, &voucherCopy);
+        
+        if (modeQueuePort != MACH_PORT_NULL && livePort == modeQueuePort) {
+            // Drain the internal queue. If one of the callout blocks sets the timerFired flag, break out and service the timer.
+            while (_dispatch_runloop_root_queue_perform_4CF(rlm->_queue));
+            if (rlm->_timerFired) {
+                // Leave livePort as the queue port, and service timers below
+                rlm->_timerFired = false;
+                break;
+            } else {
+                if (msg && msg != (mach_msg_header_t *)msg_buffer) free(msg);
             }
-            msg = (mach_msg_header_t *)msg_buffer;
-            __CFRunLoopServiceMachPort(waitSet, &msg, sizeof(msg_buffer), &livePort, poll ? 0 : TIMEOUT_INFINITY, &voucherState, &voucherCopy);
+        } else {
+            // Go ahead and leave the inner loop.
+            break;
+        }
+    } while (1);
+#else
+    if (kCFUseCollectableAllocator) {
+        // objc_clear_stack(0);
+        // <rdar://problem/16393959>
+        memset(msg_buffer, 0, sizeof(msg_buffer));
+    }
+    msg = (mach_msg_header_t *)msg_buffer;
+    __CFRunLoopServiceMachPort(waitSet, &msg, sizeof(msg_buffer), &livePort, poll ? 0 : TIMEOUT_INFINITY, &voucherState, &voucherCopy);
     #endif
         
 #elif DEPLOYMENT_TARGET_WINDOWS
-        // Here, use the app-supplied message queue mask. They will set this if they are interested in having this run loop receive windows messages.
-        __CFRunLoopWaitForMultipleObjects(waitSet, NULL, poll ? 0 : TIMEOUT_INFINITY, rlm->_msgQMask, &livePort, &windowsMessageReceived);
+    // Here, use the app-supplied message queue mask. They will set this if they are interested in having this run loop receive windows messages.
+    __CFRunLoopWaitForMultipleObjects(waitSet, NULL, poll ? 0 : TIMEOUT_INFINITY, rlm->_msgQMask, &livePort, &windowsMessageReceived);
 #endif
         
         __CFRunLoopLock(rl);
