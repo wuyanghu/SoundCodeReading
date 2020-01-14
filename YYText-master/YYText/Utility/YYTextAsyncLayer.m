@@ -105,11 +105,13 @@ static dispatch_queue_t YYTextAsyncLayerGetReleaseQueue() {
 }
 
 - (void)setNeedsDisplay {
+    NSLog(@"setNeedsDisplay");
     [self _cancelAsyncDisplay];
     [super setNeedsDisplay];
 }
 
 - (void)display {
+    NSLog(@"display");
     super.contents = super.contents;
     [self _displayAsync:_displaysAsynchronously];
 }

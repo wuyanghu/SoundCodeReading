@@ -71,6 +71,7 @@ static dispatch_queue_t YYLabelGetReleaseQueue() {
     if (_state.layoutNeedUpdate) {
         _state.layoutNeedUpdate = NO;
         [self _updateLayout];
+        NSLog(@"_updateIfNeeded");
         [self.layer setNeedsDisplay];
     }
 }
@@ -87,6 +88,7 @@ static dispatch_queue_t YYLabelGetReleaseQueue() {
 }
 
 - (void)_setLayoutNeedRedraw {
+    NSLog(@"_setLayoutNeedRedraw");
     [self.layer setNeedsDisplay];
 }
 

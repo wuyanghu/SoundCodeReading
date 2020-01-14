@@ -214,10 +214,9 @@
     label.backgroundColor = [UIColor colorWithWhite:0.933 alpha:1.000];
     [self.view addSubview:label];
     
-    [label setNeedsDisplay];
-    
+//    [label setNeedsDisplay];
 //    CGSize size = label.textLayout.textBoundingSize;
-//
+////
 //    dispatch_async(dispatch_get_main_queue(), ^{
 //        CGSize size = label.textLayout.textBoundingSize;
 //    });

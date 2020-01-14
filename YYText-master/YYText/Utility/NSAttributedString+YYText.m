@@ -578,7 +578,7 @@ return style. _attr_;
                                                attachmentSize:(CGSize)attachmentSize
                                                   alignToFont:(UIFont *)font
                                                     alignment:(YYTextVerticalAlignment)alignment {
-    NSMutableAttributedString *atr = [[NSMutableAttributedString alloc] initWithString:YYTextAttachmentToken];
+    NSMutableAttributedString *atr = [[NSMutableAttributedString alloc] initWithString:YYTextAttachmentToken];//占位
     
     YYTextAttachment *attach = [YYTextAttachment new];
     attach.content = content;
