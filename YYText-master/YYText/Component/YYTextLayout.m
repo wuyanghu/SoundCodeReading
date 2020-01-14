@@ -2958,7 +2958,7 @@ static void YYTextDrawDecoration(YYTextLayout *layout, CGContextRef context, CGS
 }
 
 static void YYTextDrawAttachment(YYTextLayout *layout, CGContextRef context, CGSize size, CGPoint point, UIView *targetView, CALayer *targetLayer, BOOL (^cancel)(void)) {
-    
+
     BOOL isVertical = layout.container.verticalForm;
     CGFloat verticalOffset = isVertical ? (size.width - layout.container.size.width) : 0;
     
@@ -3337,44 +3337,39 @@ static void YYTextDrawDebug(YYTextLayout *layout, CGContextRef context, CGSize s
                 debug:(YYTextDebugOption *)debug
                 cancel:(BOOL (^)(void))cancel{
     @autoreleasepool {
-        if (self.needDrawBlockBorder && context) {
-            if (cancel && cancel()) return;
+        if (!context) {
+            return;
+        }
+        if (cancel && cancel()) return;
+        
+        if (self.needDrawBlockBorder) {
             YYTextDrawBlockBorder(self, context, size, point, cancel);
         }
-        if (self.needDrawBackgroundBorder && context) {
-            if (cancel && cancel()) return;
+        if (self.needDrawBackgroundBorder) {
             YYTextDrawBorder(self, context, size, point, YYTextBorderTypeBackgound, cancel);
         }
-        if (self.needDrawShadow && context) {
-            if (cancel && cancel()) return;
+        if (self.needDrawShadow) {
             YYTextDrawShadow(self, context, size, point, cancel);
         }
-        if (self.needDrawUnderline && context) {
-            if (cancel && cancel()) return;
+        if (self.needDrawUnderline) {
             YYTextDrawDecoration(self, context, size, point, YYTextDecorationTypeUnderline, cancel);
         }
-        if (self.needDrawText && context) {
-            if (cancel && cancel()) return;
+        if (self.needDrawText) {
             YYTextDrawText(self, context, size, point, cancel);
         }
         if (self.needDrawAttachment && (context || view || layer)) {
-            if (cancel && cancel()) return;
             YYTextDrawAttachment(self, context, size, point, view, layer, cancel);
         }
-        if (self.needDrawInnerShadow && context) {
-            if (cancel && cancel()) return;
+        if (self.needDrawInnerShadow) {
             YYTextDrawInnerShadow(self, context, size, point, cancel);
         }
-        if (self.needDrawStrikethrough && context) {
-            if (cancel && cancel()) return;
+        if (self.needDrawStrikethrough) {
             YYTextDrawDecoration(self, context, size, point, YYTextDecorationTypeStrikethrough, cancel);
         }
-        if (self.needDrawBorder && context) {
-            if (cancel && cancel()) return;
+        if (self.needDrawBorder) {
             YYTextDrawBorder(self, context, size, point, YYTextBorderTypeNormal, cancel);
         }
-        if (debug.needDrawDebug && context) {
-            if (cancel && cancel()) return;
+        if (debug.needDrawDebug) {
             YYTextDrawDebug(self, context, size, point, debug);
         }
     }

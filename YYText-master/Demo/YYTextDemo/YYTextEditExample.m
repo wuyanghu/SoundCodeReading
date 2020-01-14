@@ -21,7 +21,8 @@
 
 @interface YYTextEditExample () <YYTextViewDelegate, YYTextKeyboardObserver>
 @property (nonatomic, assign) YYTextView *textView;
-@property (nonatomic, strong) UIImageView *imageView;
+@property (nonatomic, strong) UIImageView *oneImageView;
+@property (nonatomic, strong) UIImageView *twoImageView;
 @property (nonatomic, strong) UISwitch *verticalSwitch;
 @property (nonatomic, strong) UISwitch *debugSwitch;
 @property (nonatomic, strong) UISwitch *exclusionSwitch;
@@ -39,14 +40,18 @@
     __weak typeof(self) _self = self;
     
     UIView *toolbar;
-//    if ([UIVisualEffectView class]) {
-//        toolbar = [[UIVisualEffectView alloc] initWithEffect:[UIBlurEffect effectWithStyle:UIBlurEffectStyleExtraLight]];
-//    } else {
+    if ([UIVisualEffectView class]) {
+        UIVisualEffectView * effectView = [[UIVisualEffectView alloc] initWithEffect:[UIBlurEffect effectWithStyle:UIBlurEffectStyleExtraLight]];
+        toolbar = effectView.contentView;
+        [self.view addSubview:effectView];
+        [self.view bringSubviewToFront:effectView];
+    } else {
         toolbar = [UIToolbar new];
-//    }
+        [self.view addSubview:toolbar];
+    }
     toolbar.size = CGSizeMake(kScreenWidth, 40);
     toolbar.top = kiOS7Later ? 64 : 0;
-    [self.view addSubview:toolbar];
+    
     
     NSMutableAttributedString *text = [[NSMutableAttributedString alloc] initWithString:@"It was the best of times, it was the worst of times, it was the age of wisdom, it was the age of foolishness, it was the season of light, it was the season of darkness, it was the spring of hope, it was the winter of despair, we had everything before us, we had nothing before us. We were all going direct to heaven, we were all going direct the other way.\n\n这是最好的时代，这是最坏的时代；这是智慧的时代，这是愚蠢的时代；这是信仰的时期，这是怀疑的时期；这是光明的季节，这是黑暗的季节；这是希望之春，这是失望之冬；人们面前有着各样事物，人们面前一无所有；人们正在直登天堂，人们正在直下地狱。"];
     text.yy_font = [UIFont fontWithName:@"Times New Roman" size:20];
@@ -138,7 +143,7 @@
     }];
     [toolbar addSubview:_exclusionSwitch];
     
-    
+    [self setExclusionPathEnabled:YES];
     [[YYTextKeyboardManager defaultManager] addObserver:self];
 }
 
@@ -148,12 +153,16 @@
 
 - (void)setExclusionPathEnabled:(BOOL)enabled {
     if (enabled) {
-        [self.textView addSubview:self.imageView];
-        UIBezierPath *path = [UIBezierPath bezierPathWithRoundedRect:self.imageView.frame
-                                                        cornerRadius:self.imageView.layer.cornerRadius];
-        self.textView.exclusionPaths = @[path]; /// Set exclusion paths
+        [self.textView addSubview:self.oneImageView];
+        UIBezierPath *path = [UIBezierPath bezierPathWithRoundedRect:self.oneImageView.frame
+                                                        cornerRadius:self.oneImageView.layer.cornerRadius];
+        
+        [self.textView addSubview:self.twoImageView];
+        UIBezierPath *path2 = [UIBezierPath bezierPathWithRoundedRect:self.twoImageView.frame
+                                                        cornerRadius:self.twoImageView.layer.cornerRadius];
+        self.textView.exclusionPaths = @[path,path2]; /// Set exclusion paths
     } else {
-        [self.imageView removeFromSuperview];
+        [self.oneImageView removeFromSuperview];
         self.textView.exclusionPaths = nil;
     }
 }
@@ -166,20 +175,47 @@
     imageView.userInteractionEnabled = YES;
     imageView.layer.cornerRadius = imageView.height / 2;
     imageView.center = CGPointMake(kScreenWidth / 2, kScreenWidth / 2);
-    self.imageView = imageView;
-
+    self.oneImageView = imageView;
     
     __weak typeof(self) _self = self;
     UIPanGestureRecognizer *g = [[UIPanGestureRecognizer alloc] initWithActionBlock:^(UIPanGestureRecognizer *g) {
         __strong typeof(_self) self = _self;
         if (!self) return;
         CGPoint p = [g locationInView:self.textView];
-        self.imageView.center = p;
-        UIBezierPath *path = [UIBezierPath bezierPathWithRoundedRect:self.imageView.frame
-                                                        cornerRadius:self.imageView.layer.cornerRadius];
-        self.textView.exclusionPaths = @[path];
+        self.oneImageView.center = p;
+        UIBezierPath *path = [UIBezierPath bezierPathWithRoundedRect:self.oneImageView.frame
+                                                        cornerRadius:self.oneImageView.layer.cornerRadius];
+        
+        UIBezierPath *path2 = [UIBezierPath bezierPathWithRoundedRect:self.twoImageView.frame
+                                                        cornerRadius:self.twoImageView.layer.cornerRadius];
+        self.textView.exclusionPaths = @[path,path2];
     }];
     [imageView addGestureRecognizer:g];
+    
+    
+    NSData *data2 = [NSData dataNamed:@"pia@2x.png"];
+    UIImage *image2 = [[YYImage alloc] initWithData:data2 scale:2];
+    UIImageView *imageView2 = [[YYAnimatedImageView alloc] initWithImage:image2];
+    imageView2.clipsToBounds = YES;
+    imageView2.userInteractionEnabled = YES;
+    imageView2.layer.cornerRadius = imageView.height / 2;
+    imageView2.center = CGPointMake(kScreenWidth / 2, kScreenWidth / 2);
+    self.twoImageView = imageView2;
+    
+    UIPanGestureRecognizer *g2 = [[UIPanGestureRecognizer alloc] initWithActionBlock:^(UIPanGestureRecognizer *g) {
+        __strong typeof(_self) self = _self;
+        if (!self) return;
+        CGPoint p = [g locationInView:self.textView];
+        self.twoImageView.center = p;
+        
+        UIBezierPath *path = [UIBezierPath bezierPathWithRoundedRect:self.oneImageView.frame
+                                                        cornerRadius:self.oneImageView.layer.cornerRadius];
+        
+        UIBezierPath *path2 = [UIBezierPath bezierPathWithRoundedRect:self.twoImageView.frame
+                                                         cornerRadius:self.twoImageView.layer.cornerRadius];
+        self.textView.exclusionPaths = @[path,path2];
+    }];
+    [imageView2 addGestureRecognizer:g2];
 }
 
 - (void)edit:(UIBarButtonItem *)item {
