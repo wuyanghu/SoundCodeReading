@@ -174,7 +174,7 @@
     imageView.clipsToBounds = YES;
     imageView.userInteractionEnabled = YES;
     imageView.layer.cornerRadius = imageView.height / 2;
-    imageView.center = CGPointMake(kScreenWidth / 2, kScreenWidth / 2);
+    imageView.center = CGPointMake(kScreenWidth / 2, kScreenWidth / 2-50);
     self.oneImageView = imageView;
     
     __weak typeof(self) _self = self;
@@ -199,7 +199,8 @@
     imageView2.clipsToBounds = YES;
     imageView2.userInteractionEnabled = YES;
     imageView2.layer.cornerRadius = imageView.height / 2;
-    imageView2.center = CGPointMake(kScreenWidth / 2, kScreenWidth / 2);
+    imageView2.center = CGPointMake(kScreenWidth / 2, kScreenWidth / 2+50);
+    imageView2.origin = CGPointMake(100, 250);
     self.twoImageView = imageView2;
     
     UIPanGestureRecognizer *g2 = [[UIPanGestureRecognizer alloc] initWithActionBlock:^(UIPanGestureRecognizer *g) {

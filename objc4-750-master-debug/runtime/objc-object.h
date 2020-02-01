@@ -455,7 +455,7 @@ objc_object::retain()
         return rootRetain();
     }
 
-    return ((id(*)(objc_object *, SEL))objc_msgSend)(this, SEL_retain);
+    return ((id(*)(objc_object *, SEL))objc_msgSend)(this, SEL_retain);//相当于调用了retain方法
 }
 
 

@@ -22,22 +22,48 @@ void weak(void);//weak
 void messageSend(void);//消息发送
 void strong(void);//strong源码分析
 
+__weak NSString *weak_String;
+__weak NSString *weak_StringAutorelease;
+__weak NSArray * weak_arrayAutorelease;
+void createString(void);//autoreleasepool
+void autoreleasePool(void);
+
 int main(int argc, const char * argv[]) {
     @autoreleasepool {
-//        Class newClass = objc_allocateClassPair(objc_getClass("NSObject"), "newClass", 0);
-//                objc_registerClassPair(newClass);
-//        id newObject = [[newClass alloc]init];
-//        NSLog(@"%@",newObject);
         
-//        methodInit();
+        methodInit();
 //        printMethodNamesOfClass([Person class]);
-//        associated();
-//        strong();
-//        weak();
-//        
-//        messageSend();
+        associated();
+        strong();
+        weak();
+        messageSend();
+        
+        autoreleasePool();
     }
+
+    NSLog(@"------in the main()------");
+    NSLog(@"%@", weak_String);
+    NSLog(@"%@", weak_StringAutorelease);
     return 0;
+}
+
+
+void autoreleasePool(void){
+    createString();
+    NSLog(@"------超出作用区域------");
+    NSLog(@"%@", weak_String);//alloc对象已经释放
+    NSLog(@"%@\n\n", weak_StringAutorelease);//autorelease对象还存在
+    NSLog(@"%@",weak_arrayAutorelease);
+}
+
+void createString(void) {
+    
+    NSString *string = [[NSString alloc] initWithFormat:@"Hello, World!"];    // 创建常规对象
+    NSString *stringAutorelease = [NSString stringWithFormat:@"Hello, World! Autorelease"]; // 创建autorelease对象
+    NSArray * arrayAutorelease = [NSArray arrayWithObject:@"1"];
+    weak_String = string;
+    weak_StringAutorelease = stringAutorelease;
+    weak_arrayAutorelease = arrayAutorelease;
 }
 
 void methodInit(){
@@ -82,8 +108,8 @@ void strong(){
     Person * person = [[Person alloc] init];
     //指针地址指向指针
     Person *weakPerson = person;//相当于调了retain方法
-    NSLog(@"person指针:%p\nweakPerson指针:%p",person,weakPerson);
-    NSLog(@"person指针地址:%p\nweakPerson指针地址:%p",&person,&weakPerson);
+//    NSLog(@"person指针:%p\nweakPerson指针:%p",person,weakPerson);
+//    NSLog(@"person指针地址:%p\nweakPerson指针地址:%p",&person,&weakPerson);
 }
 
 

@@ -281,7 +281,7 @@ void _object_set_associative_reference(id object, void *key, id value, uintptr_t
         if (new_value) {
             // break any existing association.
             AssociationsHashMap::iterator i = associations.find(disguised_object);
-            //同一个对象只会创建一个ObjectAssociationMap对象。？
+            //同一个对象只会创建一个ObjectAssociationMap对象。
             if (i != associations.end()) {
                 // secondary table exists
                 //当前对象已经创建关联对象时
@@ -289,17 +289,17 @@ void _object_set_associative_reference(id object, void *key, id value, uintptr_t
                 ObjectAssociationMap::iterator j = refs->find(key);
                 if (j != refs->end()) {
                     old_association = j->second;
-                    j->second = ObjcAssociation(policy, new_value);
+                    j->second = ObjcAssociation(policy, new_value);//key已经存在时，找到对应位置更新旧的
                 } else {
-                    (*refs)[key] = ObjcAssociation(policy, new_value);//对象置nil后再关联对象
+                    (*refs)[key] = ObjcAssociation(policy, new_value);//key没有存储时，直接存储
                 }
             } else {
                 // create the new association (first time).
-                //当前对象没有创建关联对象时
+                //当前对象没有创建关联对象时，一个对象仅分配一个ObjectAssociationMap
                 ObjectAssociationMap *refs = new ObjectAssociationMap;
                 associations[disguised_object] = refs;
                 (*refs)[key] = ObjcAssociation(policy, new_value);
-                object->setHasAssociatedObjects();
+                object->setHasAssociatedObjects();//给当前对象设置标志位
             }
         } else {
             // setting the association to nil breaks the association.

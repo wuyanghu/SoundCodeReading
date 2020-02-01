@@ -287,7 +287,7 @@ static bool call_category_loads(void)
     if (loadable_categories) free(loadable_categories);
 
     // Reattach the (now augmented) detached list. 
-    // But if there's nothing left to load, destroy the list.
+    // But if there's nothing left to load, destroy the list.(但是如果没有东西可以加载，就销毁列表。)
     if (used) {
         loadable_categories = cats;
         loadable_categories_used = used;

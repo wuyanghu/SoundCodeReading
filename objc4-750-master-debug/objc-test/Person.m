@@ -15,7 +15,7 @@
 #pragma mark - 对象释放
 
 - (void)dealloc{
-    NSLog(@"%@",NSStringFromSelector(_cmd));
+//    NSLog(@"%@",NSStringFromSelector(_cmd));
 }
 
 #pragma mark - 验证实例方法和类方法中self的区别

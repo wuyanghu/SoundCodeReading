@@ -641,13 +641,14 @@ struct magic_t {
 #   undef M1
 };
     
-//autoreleasepool数据结构
+    //autoreleasepool数据结构:以栈为节点的双链表结构
 class AutoreleasePoolPage 
 {
     // EMPTY_POOL_PLACEHOLDER is stored in TLS when exactly one pool is 
     // pushed and it has never contained any objects. This saves memory 
     // when the top level (i.e. libdispatch) pushes and pops pools but 
     // never uses them.
+//    EMPTY_POOL_PLACEHOLDER在push一个池时存储在TLS中，并且它从来没有包含任何对象。这节省了内存，当顶层(即libdispatch)push和pop，但从不使用它们。
 #   define EMPTY_POOL_PLACEHOLDER ((id*)1)
 
 #   define POOL_BOUNDARY nil //边界
@@ -691,7 +692,7 @@ class AutoreleasePoolPage
         mprotect(this, SIZE, PROT_READ | PROT_WRITE);
 #endif
     }
-
+//构造函数
     AutoreleasePoolPage(AutoreleasePoolPage *newParent) 
         : magic(), next(begin()), thread(pthread_self()),
           parent(newParent), child(nil), 
@@ -806,12 +807,12 @@ class AutoreleasePoolPage
             }
 
             page->unprotect();
-            id obj = *--page->next;
+            id obj = *--page->next;//出栈
             memset((void*)page->next, SCRIBBLE, sizeof(*page->next));
             page->protect();
 
             if (obj != POOL_BOUNDARY) {
-                objc_release(obj);
+                objc_release(obj);//释放
             }
         }
 
@@ -886,13 +887,13 @@ class AutoreleasePoolPage
         return result;
     }
 
-
+    //是否有空的占位
     static inline bool haveEmptyPoolPlaceholder()
     {
         id *tls = (id *)tls_get_direct(key);
         return (tls == EMPTY_POOL_PLACEHOLDER);
     }
-
+    //设置空的占位
     static inline id* setEmptyPoolPlaceholder()
     {
         assert(tls_get_direct(key) == nil);
@@ -935,7 +936,7 @@ class AutoreleasePoolPage
             return page->add(obj);//添加obj
         } else if (page) {//page存在且满了，需要分配新的页
             return autoreleaseFullPage(obj, page);
-        } else {
+        } else {//page为空时
             return autoreleaseNoPage(obj);
         }
     }
@@ -966,7 +967,7 @@ class AutoreleasePoolPage
         assert(!hotPage());
 
         bool pushExtraBoundary = false;
-        if (haveEmptyPoolPlaceholder()) {
+        if (haveEmptyPoolPlaceholder()) {//已经有空的pool占位,嵌套时调用
             // We are pushing a second pool over the empty placeholder pool
             // or pushing the first object into the empty placeholder pool.
             // Before doing that, push a pool boundary on behalf of the pool 
@@ -988,7 +989,7 @@ class AutoreleasePoolPage
             // We are pushing a pool with no pool in place,
             // and alloc-per-pool debugging was not requested.
             // Install and return the empty pool placeholder.
-            return setEmptyPoolPlaceholder();
+            return setEmptyPoolPlaceholder();//首次会设置占位
         }
 
         // We are pushing an object or a non-placeholder'd pool.
@@ -999,11 +1000,11 @@ class AutoreleasePoolPage
         
         // Push a boundary on behalf of the previously-placeholder'd pool.
         if (pushExtraBoundary) {
-            page->add(POOL_BOUNDARY);
+            page->add(POOL_BOUNDARY);//添加哨兵对象
         }
         
         // Push the requested object or pool.
-        return page->add(obj);
+        return page->add(obj);//添加对象
     }
 
 
@@ -1077,7 +1078,7 @@ public:
                 pop(coldPage()->begin());
             } else {
                 // Pool was never used. Clear the placeholder.
-                setHotPage(nil);
+                setHotPage(nil);//清空占位
             }
             return;
         }
@@ -1836,6 +1837,8 @@ _objc_rootHash(id obj)
 {
     return (uintptr_t)obj;
 }
+
+#pragma mark - autoreleasePool
 
 void *
 objc_autoreleasePoolPush(void)

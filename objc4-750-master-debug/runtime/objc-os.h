@@ -694,7 +694,7 @@ static inline void *tls_get_direct(tls_key_t k)
     assert(is_valid_direct_key(k));
 
     if (_pthread_has_direct_tsd()) {
-        return _pthread_getspecific_direct(k);
+        return _pthread_getspecific_direct(k);//https://blog.csdn.net/rain_qingtian/article/details/11493831
     } else {
         return pthread_getspecific(k);
     }

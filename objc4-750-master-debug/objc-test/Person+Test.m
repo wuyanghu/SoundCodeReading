@@ -8,6 +8,11 @@
 #import "Person+Test.h"
 
 @implementation Person (Test)
+
++ (void)load{
+    NSLog(@"test load");
+}
+
 - (void)test
 {
 //    NSLog(@"%@",NSStringFromSelector(_cmd));

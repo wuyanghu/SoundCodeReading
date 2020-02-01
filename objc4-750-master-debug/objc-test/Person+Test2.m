@@ -8,6 +8,11 @@
 #import "Person+Test2.h"
 
 @implementation Person (Test2)
+
++ (void)load{
+    NSLog(@"test2 load");
+}
+
 - (void)run
 {
     NSLog(@"Person (Test2) - run");

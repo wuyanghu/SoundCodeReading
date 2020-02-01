@@ -48,6 +48,8 @@
 		75A95053202BAC4100D7D56F /* objc-lockdebug.h in Headers */ = {isa = PBXBuildFile; fileRef = 75A95052202BAC4100D7D56F /* objc-lockdebug.h */; };
 		760B3E7023A1B67D00DD02B9 /* MessageSend.m in Sources */ = {isa = PBXBuildFile; fileRef = 760B3E6F23A1B67D00DD02B9 /* MessageSend.m */; };
 		760E3B9C23AC49A500CEE42A /* Student.m in Sources */ = {isa = PBXBuildFile; fileRef = 760E3B9B23AC49A500CEE42A /* Student.m */; };
+		766E5C7023DC3DA400F10AE3 /* WPLogManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 766E5C6F23DC3DA400F10AE3 /* WPLogManager.m */; };
+		766E5C7323DC3F4000F10AE3 /* fishhook.c in Sources */ = {isa = PBXBuildFile; fileRef = 766E5C7123DC3F4000F10AE3 /* fishhook.c */; };
 		768E7ADD23799E3A00EAAEE8 /* Person.m in Sources */ = {isa = PBXBuildFile; fileRef = 768E7ADC23799E3A00EAAEE8 /* Person.m */; };
 		768E7AE023799E9F00EAAEE8 /* Person+Test.m in Sources */ = {isa = PBXBuildFile; fileRef = 768E7ADF23799E9F00EAAEE8 /* Person+Test.m */; };
 		768E7AE323799EC000EAAEE8 /* Person+Test2.m in Sources */ = {isa = PBXBuildFile; fileRef = 768E7AE223799EC000EAAEE8 /* Person+Test2.m */; };
@@ -200,6 +202,10 @@
 		760B3E6F23A1B67D00DD02B9 /* MessageSend.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MessageSend.m; sourceTree = "<group>"; };
 		760E3B9A23AC49A500CEE42A /* Student.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Student.h; sourceTree = "<group>"; };
 		760E3B9B23AC49A500CEE42A /* Student.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = Student.m; sourceTree = "<group>"; };
+		766E5C6E23DC3DA400F10AE3 /* WPLogManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = WPLogManager.h; sourceTree = "<group>"; };
+		766E5C6F23DC3DA400F10AE3 /* WPLogManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = WPLogManager.m; sourceTree = "<group>"; };
+		766E5C7123DC3F4000F10AE3 /* fishhook.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = fishhook.c; sourceTree = "<group>"; };
+		766E5C7223DC3F4000F10AE3 /* fishhook.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = fishhook.h; sourceTree = "<group>"; };
 		768E7ADB23799E3A00EAAEE8 /* Person.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Person.h; sourceTree = "<group>"; };
 		768E7ADC23799E3A00EAAEE8 /* Person.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = Person.m; sourceTree = "<group>"; };
 		768E7ADE23799E9F00EAAEE8 /* Person+Test.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Person+Test.h"; sourceTree = "<group>"; };
@@ -417,6 +423,10 @@
 				760B3E6F23A1B67D00DD02B9 /* MessageSend.m */,
 				4B524EE023B21A76005B6EDB /* MethodSignature.h */,
 				4B524EE123B21A76005B6EDB /* MethodSignature.m */,
+				766E5C6E23DC3DA400F10AE3 /* WPLogManager.h */,
+				766E5C6F23DC3DA400F10AE3 /* WPLogManager.m */,
+				766E5C7123DC3F4000F10AE3 /* fishhook.c */,
+				766E5C7223DC3F4000F10AE3 /* fishhook.h */,
 			);
 			path = "objc-test";
 			sourceTree = "<group>";
@@ -795,8 +805,10 @@
 				768E7AE023799E9F00EAAEE8 /* Person+Test.m in Sources */,
 				768E7AE323799EC000EAAEE8 /* Person+Test2.m in Sources */,
 				768E7ADD23799E3A00EAAEE8 /* Person.m in Sources */,
+				766E5C7023DC3DA400F10AE3 /* WPLogManager.m in Sources */,
 				760B3E7023A1B67D00DD02B9 /* MessageSend.m in Sources */,
 				760E3B9C23AC49A500CEE42A /* Student.m in Sources */,
+				766E5C7323DC3F4000F10AE3 /* fishhook.c in Sources */,
 				4B524EE223B21A76005B6EDB /* MethodSignature.m in Sources */,
 				4B26AAC82379816F0080D4B9 /* NSObject+AddParams.m in Sources */,
 				5255259B21C68E3C00072CE6 /* main.m in Sources */,
