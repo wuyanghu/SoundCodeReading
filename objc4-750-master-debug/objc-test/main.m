@@ -71,6 +71,8 @@ void methodInit(){
     Person * person2 = [Person new];//[callAlloc(self, false/*checkNil*/) init] 与上面等价
     Person * person3 = [Person alloc];
     Person * person4 = [person3 init];
+    
+    [person isKindOfClass:[Person class]];
 }
 
 //消息发送
